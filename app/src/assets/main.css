@@ -1,0 +1,25 @@
+:root{
+  --white: #ffffff;
+  --blueish-white: #cdd3dd;
+}
+
+.body {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  background-image: radial-gradient(circle farthest-corner at 50% 50%, var(--white), var(--blueish-white));
+  letter-spacing: -1px;
+}
+
+/* --------------------- FROM HEREON OUT: BODY GRAPHICS --------------------- */
+g path {
+  transition-duration: 475ms;
+  /*transition-timing-function: cubic-bezier(.165, .84, .44, 1);*/
+  transition-timing-function: cubic-bezier(.075, .82, .165, 1);
+}
+g:hover path {
+  fill: lime !important;
+  cursor: pointer;
+}
+/* --------------------- FROM HEREON OUT: STUFF COPIED STRAIT FROM WEBFLOW --------------------- */
