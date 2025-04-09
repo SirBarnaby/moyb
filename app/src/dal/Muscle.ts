@@ -1,9 +1,32 @@
-class Muscle {
-  id: number
-  name: string
-  name_latin: string
-  description: string
-  main_fiber_type: number
-  random_stat: number = 0.5
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import { muscleRepository } from "@/main.ts";
+
+export type Muscle = {
+  id: string;
+  name: string;
+  nameLatin?: string;
+  description?: string;
+  equipmentRequired?: string;
+  movementType?: string;
+  popularity?: number;
+  rangeOfMotion?: number;
+  injuryRiskFactor?: string;
+  jointStressFactor?: string;
+  cnsFatigueFactor?: string;
+  isUnilateral: boolean;
+  isHighSpinalLoad: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
+export const useMuscleStore
+  = defineStore("muscle", () => {
+  const muscle = ref<Muscle[]>([]);
+  function loadMuscleByName(name: string) {
+    muscleRepository
+      .search(name)
+      .then(dbMuscles => muscle.value = dbMuscles)
+  }
+  return { muscle, loadMuscleByName };
+})

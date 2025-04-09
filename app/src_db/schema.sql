@@ -14,12 +14,15 @@ CREATE TABLE exercise (
     description TEXT,
     equipment_required TEXT,
     movement_type E_contraction_type,
+    popularity INT,
     range_of_motion INT CHECK (range_of_motion BETWEEN 0 AND 360),
     injury_risk_factor TEXT,
     joint_stress_factor TEXT,
     cns_fatigue_factor TEXT,
     is_unilateral BOOLEAN NOT NULL DEFAULT FALSE,
     is_high_spinal_load BOOLEAN NOT NULL DEFAULT FALSE,
+    image_url TEXT,
+    main_muscle TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -47,7 +50,7 @@ CREATE TABLE muscle_in_exercise (
     muscle_id UUID REFERENCES muscle(id) ON DELETE CASCADE,
     contraction_type E_contraction_type,
     fatigue_accumulation_factor TEXT,
-    is_primary_mover E_muscle_contribution_type,
+    muscle_movement_category E_muscle_contribution_type,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (exercise_id, muscle_id)
 );

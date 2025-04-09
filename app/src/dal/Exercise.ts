@@ -1,22 +1,34 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
+import type { MuscleInExercise } from "./MuscleInExercise";
+import { exerciseRepository } from "@/main.ts";
 
-type Exercise = {
-  id: number
-  name: string
-  description: string
-  muscles_worked: string[]
+export type Exercise = {
+  id: string;
+  name: string;
+  description?: string;
+  equipmentRequired?: string;
+  movementType?: string;
+  popularity?: number;
+  rangeOfMotion?: number;
+  injuryRiskFactor?: string;
+  jointStressFactor?: string;
+  cnsFatigueFactor?: string;
+  isUnilateral: boolean;
+  isHighSpinalLoad: boolean;
+  createdAt: string;
+  updatedAt: string;
+  musclesAffected: MuscleInExercise[]
 }
 
-export const useExerciseStore = defineStore("exercise", () => {
+export const useExerciseStore
+  = defineStore("exercise", () => {
   const exercises = ref<Exercise[]>([]);
-  let ex1: Exercise = {id: 1, name: "Pushup", description: "Good ass exercise", muscles_worked: ["calves"]}
-  let ex2: Exercise = {id: 2, name: "Pushup2", description: "Good ass exercise", muscles_worked: ["calves"]}
-  let ex3: Exercise = {id: 3, name: "Pushup3", description: "Good ass exercise", muscles_worked: ["calves"]}
-  function loadChestExercises() {
-    exercises.value = [ex1, ex2, ex3];
+  function loadExercisesByTargetMuscle(targetMuscle: string) {
+    exerciseRepository
+      .findByTargetMuscle(targetMuscle)
+      .then(dbExercises => exercises.value = dbExercises)
   }
 
-  return { exercises, loadChestExercises };
+  return { exercises, loadExercisesByTargetMuscle };
 });
-

@@ -1,10 +1,16 @@
 import './assets/webflow-style.css'
 import './assets/main.css'
 
+import { ExerciseRepository } from "@/repositories/ExerciseRepository.ts";
+import { MuscleRepository } from "@/repositories/MuscleRepository.ts";
+
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 
 import App from './App.vue'
+
+export const exerciseRepository = new ExerciseRepository();
+export const muscleRepository = new MuscleRepository();
 
 const pinia = createPinia()
 const app = createApp(App)

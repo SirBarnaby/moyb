@@ -3,9 +3,9 @@ import { useExerciseStore } from "@/dal/Exercise.ts";
 
 const store = useExerciseStore();
 
-const notifyExerciseSelector = () => {
-  store.loadChestExercises();
-};
+const notifyExerciseSelector = (muscle: string) => {
+  store.loadExercisesByTargetMuscle(muscle)
+}
 </script>
 
 <template>
@@ -48,7 +48,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="chest"
-      style="display:inline" @click="notifyExerciseSelector"><path
+      style="display:inline" @click="notifyExerciseSelector('chest')"><path
      fill="#979797"
      opacity="1"
      stroke="none"
@@ -66,7 +66,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="tibialis"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('tibialis')"><path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -84,7 +84,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="biceps"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('biceps')"><path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -104,7 +104,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="frontdelts"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('anterior delts')"><path
      fill="#959595"
      opacity="1"
      stroke="none"
@@ -132,7 +132,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="abductors"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('abductors')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -149,7 +149,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="abs"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('abdominals')"><path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -220,7 +220,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="glutes"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('glutes')"><path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -236,7 +236,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="traps"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('trapezius')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -264,7 +264,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="lats"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('lats')"><path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -282,7 +282,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="triceps"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('triceps')"><path
      fill="#919191"
      opacity="1"
      stroke="none"
@@ -310,7 +310,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="adductors"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('adductors')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -338,7 +338,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="forearmextendors"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('forearm extensors')"><path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -355,7 +355,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="rotatorcuff"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('rotator cuff')"><path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -374,7 +374,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="calves"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('calves')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -426,7 +426,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="reardelts"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('posterior delts')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -442,7 +442,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="lowerback"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('lower back')"><path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -460,7 +460,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="quads"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('quads')"><path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -508,7 +508,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="obliques"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('obliques')"><path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -536,7 +536,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="hamstrings"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('hamstrings')"><path
      id="path95-2"
      style="fill:#9b9b9b;fill-opacity:1;stroke-width:0.292513"
      d="m 131.64938,119.79557 c -0.47974,-1.48709 -0.31803,-2.95796 -0.0477,-4.43443 0.1418,1.42618 0.28361,2.85237 0.42295,4.39184 -0.0846,0.0949 -0.16677,0.0765 -0.37525,0.0426 z m 0.0139,-0.0899 c 0.38848,4.5583 1.18836,8.96342 2.81905,13.18548 0.1381,0.35757 0.1562,0.68001 -0.064,0.99962 -0.82335,1.19508 -1.41385,2.51131 -1.93236,3.89432 -0.43501,-0.32224 -0.39168,-0.74238 -0.45453,-1.11243 -1.2385,-7.29213 -2.52605,-14.57956 -2.55615,-22.01122 -0.0122,-3.01132 0.21517,-5.93525 2.99279,-7.90708 2.03496,-1.44461 2.50702,-1.32683 3.19596,1.06226 0.92953,3.22336 1.28507,6.55632 1.81888,9.85797 1.22251,7.56108 2.49309,15.11253 2.90861,22.77536 0.0213,0.3922 0.0494,0.78402 0.0934,1.47631 -4.35668,-6.8997 -7.38869,-13.99021 -8.46742,-21.95028 -0.19836,-0.23973 -0.22099,-0.46456 -0.25704,-0.66576 -0.12207,-0.68141 -0.17293,-1.36953 -0.12825,-1.95522 -0.12054,0.69228 0.16602,1.47782 0.031,2.35067 z" /><path
@@ -545,7 +545,7 @@ const notifyExerciseSelector = () => {
       d="m 161.24953,118.0003 c -0.35724,0 0.0354,-3.12944 0.20267,-4.74328 0.18048,1.4836 0.4399,2.96532 -0.0789,4.53731 -0.0522,0.10524 -0.0866,0.18477 -0.1238,0.20597 z m -0.0192,-0.16241 c -0.44148,5.45722 -1.9192,10.55018 -4.00089,15.49074 -1.2004,2.84893 -3.08093,5.32915 -4.31169,8.33273 -0.4512,-0.52572 -0.26513,-0.96205 -0.24461,-1.35385 0.54125,-10.32341 2.53666,-20.44751 4.21549,-30.61454 0.17932,-1.08587 0.54808,-2.12349 0.95584,-3.15422 0.34638,-0.87558 0.7959,-0.85577 1.5216,-0.51195 2.95418,1.39964 4.09374,3.88557 4.13188,6.96961 0.0556,4.49832 -0.15942,8.9822 -0.88428,13.43551 -0.60716,3.73024 -1.04651,7.48835 -1.9616,11.23831 -0.66127,-1.37713 -1.39057,-2.68779 -2.11103,-4.0024 -0.29601,-0.54014 0.13259,-1.10915 0.31202,-1.64062 1.53147,-4.53643 2.58384,-9.15441 2.45418,-14.10075 0.0771,-0.50402 0.17829,-0.88642 0.20947,-1.27324 0.0419,-0.5198 0.01,-1.04477 0.0116,-1.56751 -0.0189,0.89533 0.10489,1.80565 -0.29799,2.75218 z" /></g>
     <g
       id="forearmflexors"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('forearm flexors')"><path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -583,7 +583,7 @@ const notifyExerciseSelector = () => {
 
     <g
       id="sidedelts"
-      style="display:inline"><path
+      style="display:inline" @click="notifyExerciseSelector('lateral delts')"><path
      fill="#919191"
      opacity="1"
      stroke="none"

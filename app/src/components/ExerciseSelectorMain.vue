@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { useExerciseStore } from "@/dal/Exercise.ts";
+import { type Exercise, useExerciseStore } from "@/dal/Exercise.ts";
 import { computed } from "vue";
+import {type Muscle, useMuscleStore} from "@/dal/Muscle.ts";
 
-const store = useExerciseStore();
-const exercises = computed(() => store.exercises);
+const exerciseStore = useExerciseStore();
+const muscleStore = useMuscleStore();
+const exercises : Exercise[] = computed(() => exerciseStore.exercises);
+const targetMuscle : Muscle = computed(() => muscleStore.muscle);
 </script>
 
 <template>
@@ -12,11 +15,11 @@ const exercises = computed(() => store.exercises);
       <div class="hoverablearrow">&lt;arrow&gt;</div>
       <div class="exerciseselectortopdivider">
         <div class="exerciseselectortopleft">
-          <div class="describingtext">Your pecs aren’t just for show—they're the powerhouse behind every strong push, whether you're shoving an opponent in sports, launching yourself off the ground in a burpee, or holding your balance when falling forward.</div>
+          <div class="describingtext">{{ targetMuscle.description }}</div>
         </div>
         <div class="exerciseselectortopright">
-          <div class="esmusclegroup">SIDE DELTS</div>
-          <div class="esmusclegrouplatin">Pectoralis Major</div>
+          <div class="esmusclegroup">{{ targetMuscle.name }}</div>
+          <div class="esmusclegrouplatin">{{ targetMuscle.nameLatin }}</div>
         </div>
       </div>
     </div>
@@ -28,8 +31,8 @@ const exercises = computed(() => store.exercises);
           </div>
           <div class="esilright">
             <div class="exercisename">{{ exercise.name }}</div>
-            <div v-for="muscle in exercise.muscles_worked" class="muscleworked">
-              <div class="muscleworkedtext">{{ muscle }}</div>
+            <div v-for="muscle in exercise.musclesAffected" class="muscleworked">
+              <div class="muscleworkedtext">{{ muscle }} {{ muscle.fatigue_accumulation_factor }}</div>
             </div>
           </div>
         </div>
