@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useExerciseStore } from "@/dal/Exercise.ts";
+import { useAllExercisesStore } from "@/dal/Exercise.ts";
 
-const store = useExerciseStore();
+const store = useAllExercisesStore();
 
 const notifyExerciseSelector = (muscle: string) => {
-  store.loadExercisesByTargetMuscle(muscle)
+  store.loadAllExercisesByTargetMuscle(muscle)
 }
 </script>
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { type Exercise, useExerciseStore } from "@/dal/Exercise.ts";
+import { type Exercise, useAllExercisesStore } from "@/dal/Exercise.ts";
 import { computed } from "vue";
 import {type Muscle, useMuscleStore} from "@/dal/Muscle.ts";
 
-const exerciseStore = useExerciseStore();
+const exerciseStore = useAllExercisesStore();
 const muscleStore = useMuscleStore();
 const exercises : Exercise[] = computed(() => exerciseStore.exercises);
 const targetMuscle : Muscle = computed(() => muscleStore.muscle);

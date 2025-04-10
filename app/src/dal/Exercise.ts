@@ -21,14 +21,14 @@ export type Exercise = {
   musclesAffected: MuscleInExercise[]
 }
 
-export const useExerciseStore
+export const useAllExercisesStore
   = defineStore("exercise", () => {
   const exercises = ref<Exercise[]>([]);
-  function loadExercisesByTargetMuscle(targetMuscle: string) {
+  function loadAllExercisesByTargetMuscle(targetMuscle: string) {
     exerciseRepository
       .findByTargetMuscle(targetMuscle)
       .then(dbExercises => exercises.value = dbExercises)
   }
 
-  return { exercises, loadExercisesByTargetMuscle };
+  return { exercises, loadAllExercisesByTargetMuscle };
 });
