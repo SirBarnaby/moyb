@@ -37,6 +37,17 @@ export class MuscleHelper {
     muscleList.push(new MuscleHelper("Triceps", 21))
     return muscleList
   }
+  public addPrimarySets(amount: number) {
+    this.setsPrimary += amount
+  }
+
+  public addSynergicSets(amount: number) {
+    this.setsSynergic += amount
+  }
+
+  public addStabilizingSets(amount: number) {
+    this.setsStabilizing += amount
+  }
 }
 
 

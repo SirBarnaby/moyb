@@ -1,11 +1,32 @@
 <script setup lang="ts">
 import { useAllExercisesStore } from "@/dal/Exercise.ts";
+import { useBusinessLogicStore } from "@/bll/WorkoutPlan.ts";
+import { computed, watch } from "vue";
 
-const store = useAllExercisesStore();
+const allExercisesStore = useAllExercisesStore();
+const bllStore = useBusinessLogicStore();
 
 const notifyExerciseSelector = (muscle: string) => {
-  store.loadAllExercisesByTargetMuscle(muscle)
+  allExercisesStore.loadAllExercisesByTargetMuscle(muscle)
 }
+
+const bicepsColor = computed(() => {
+  // Get your target value from the array - adjust index as needed
+  const value = bllStore.presetMuscleArray[0] || 0; // Example: first element
+
+  // Normalize value between 0-100 (adjust min/max according to your data)
+
+  return `hsl(0, 100%, ${lightness}%)`;
+});
+
+// Watch for changes in the presetMuscleArray
+watch(
+  () => bllStore.presetMuscleArray,
+  (newArray) => {
+
+  },
+  { deep: true } // Required for array content changes
+);
 </script>
 
 <template>

@@ -2,11 +2,14 @@
 import { type Exercise, useAllExercisesStore } from "@/dal/Exercise.ts";
 import { computed } from "vue";
 import {type Muscle, useMuscleStore} from "@/dal/Muscle.ts";
+import { useBusinessLogicStore } from "@/bll/WorkoutPlan.ts";
 
 const exerciseStore = useAllExercisesStore();
 const muscleStore = useMuscleStore();
+const bllStore = useBusinessLogicStore();
 const exercises : Exercise[] = computed(() => exerciseStore.exercises);
 const targetMuscle : Muscle = computed(() => muscleStore.muscle);
+const myHeatMap = computed(() => bllStore.presetMuscleArray)
 </script>
 
 <template>
@@ -24,7 +27,7 @@ const targetMuscle : Muscle = computed(() => muscleStore.muscle);
       </div>
     </div>
     <div class="exerciseselectorall">
-      <div v-for="exercise in exercises" :key="exercise" class="exerciseselectoritem">
+      <div v-for="exercise in exercises" @click="bllStore.addMuscleLoadToPlan(exercise, 3)" :key="exercise" class="exerciseselectoritem">
         <div class="exerciseselectoritemleft">
           <div class="esilleft">
             <div class="exercisedescription">{{ exercise.description }}</div>

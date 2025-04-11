@@ -8,7 +8,7 @@ export const useBusinessLogicStore
   = defineStore("workoutPlan", () => {
   const exercisesArray = ref<Exercise[]>([])
   const exercisesArraySets = ref<number[]>([])
-  const muscleLoadArray = ref<MuscleHelper[]>(MuscleHelper.initializeMuscleList())
+  const presetMuscleArray = ref<MuscleHelper[]>(MuscleHelper.initializeMuscleList())
   function addExerciseAndSetsToWeek(exerciseToAdd: Exercise, sets: number) {
     // If this exercise already exists, UPDATE EXISTING.
     if (exercisesArray.value?.includes(exerciseToAdd)) {
@@ -30,21 +30,22 @@ export const useBusinessLogicStore
     exercisesArraySets.value.splice(indexToRemove, 1)
   }
   function addMuscleLoadToPlan(exercise: Exercise, sets: number) {
-    exercise.musclesAffected.forEach(function (element) {
-      const subjectMuscle =
-        muscleLoadArray.value.find(
-          item => item.id == element.muscle_id)
-      if (element.muscle_movement_category == "primary") {
+    // For EACH muscle worked in the target exercise...
+    exercise.musclesAffected.forEach(function (muscleInExercise) {
+      // subjectMuscle == The muscle in our already populated
+      // list of muscles, where we will add values
+      const subjectMuscle = presetMuscleArray.value.find(
+          muscle => muscle.id == muscleInExercise.muscle_id)
+      if (muscleInExercise.muscle_movement_category == "primary") {
+        subjectMuscle!.addPrimarySets(sets)
       }
-      if (element.muscle_movement_category == "synergistic") {
+      if (muscleInExercise.muscle_movement_category == "synergistic") {
+        subjectMuscle!.addSynergicSets(sets)
       }
-      if (element.muscle_movement_category == "stabilizing") {
+      if (muscleInExercise.muscle_movement_category == "stabilizing") {
+        subjectMuscle!.addStabilizingSets(sets)
       }
       });
-    for (const muscle in exercise.musclesAffected) {
-
-    }
   }
-
-  return {  };
+  return { presetMuscleArray, addMuscleLoadToPlan };
 });
