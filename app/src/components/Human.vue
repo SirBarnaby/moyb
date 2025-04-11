@@ -10,15 +10,14 @@ const notifyExerciseSelector = (muscle: string) => {
   allExercisesStore.loadAllExercisesByTargetMuscle(muscle)
 }
 
-const bicepsColor = computed(() => {
-  // Get your target value from the array - adjust index as needed
-  const value = bllStore.presetMuscleArray[0] || 0; // Example: first element
+function changeColourOfElement(elementId: string, fillValue: string) {
+  const svgMuscle = document.getElementById(elementId) as SVGElement
+  svgMuscle!.style.fill = fillValue
+}
 
-  // Normalize value between 0-100 (adjust min/max according to your data)
+function getFillValueBySets(amountSets: number) {
 
-  return `hsl(0, 100%, ${lightness}%)`;
-});
-
+}
 // Watch for changes in the presetMuscleArray
 watch(
   () => bllStore.presetMuscleArray,
