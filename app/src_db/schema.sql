@@ -1,21 +1,12 @@
--- Enable UUID generation extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- ENUM types for structured data
-CREATE TYPE E_contraction_type AS ENUM ('eccentric', 'concentric', 'isometric', 'special');
-CREATE TYPE E_muscle_fiber_type AS ENUM ('1', '2', '2X');
-CREATE TYPE E_muscle_contribution_type AS ENUM
-    ('primary', 'secondary', 'stabilizing', 'synergistic', 'antagonistic', 'fixator');
-
 -- Exercise Table
 CREATE TABLE exercise (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     description TEXT,
     equipment_required TEXT,
-    movement_type E_contraction_type,
+    movement_type TEXT,
     popularity INT,
-    range_of_motion INT CHECK (range_of_motion BETWEEN 0 AND 360),
+    range_of_motion TEXT,
     injury_risk_factor TEXT,
     joint_stress_factor TEXT,
     cns_fatigue_factor TEXT,
@@ -29,11 +20,11 @@ CREATE TABLE exercise (
 
 -- Muscle Table
 CREATE TABLE muscle (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id SERIAL PRIMARY KEY,
     name TEXT NOT NULL,
     name_latin TEXT,
     description TEXT,
-    dominant_fiber_type E_muscle_fiber_type,
+    dominant_fiber_type TEXT,
     endurance_rating_factor TEXT,
     recovery_time_factor TEXT,
     neural_drive_sensitivity_factor TEXT,
@@ -46,11 +37,11 @@ CREATE TABLE muscle (
 
 -- Muscle-In-Exercise (Many-to-Many) Table
 CREATE TABLE muscle_in_exercise (
-    exercise_id UUID REFERENCES exercise(id) ON DELETE CASCADE,
-    muscle_id UUID REFERENCES muscle(id) ON DELETE CASCADE,
-    contraction_type E_contraction_type,
+    exercise_id INT REFERENCES exercise(id) ON DELETE CASCADE,
+    muscle_id INT REFERENCES muscle(id) ON DELETE CASCADE,
+    contraction_type TEXT,
     fatigue_accumulation_factor TEXT,
-    muscle_movement_category E_muscle_contribution_type,
+    muscle_movement_category TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (exercise_id, muscle_id)
 );

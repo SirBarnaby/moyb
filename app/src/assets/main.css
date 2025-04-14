@@ -1,6 +1,11 @@
 :root{
   --white: #ffffff;
   --blueish-white: #cdd3dd;
+  --lime: lime;
+  --bright-lime: #ccff00;
+  --scrollbar-track: transparent;
+  --scrollbar-thumb: lime;
+  --scrollbar-thumb-hover: #b4ff00;
 }
 
 .body {
@@ -14,7 +19,7 @@
 
 /* --------------------- FROM HEREON OUT: BODY GRAPHICS --------------------- */
 g path {
-  transition-duration: 475ms;
+  transition-duration: 750ms;
   /*transition-timing-function: cubic-bezier(.165, .84, .44, 1);*/
   transition-timing-function: cubic-bezier(.075, .82, .165, 1);
 }
@@ -22,4 +27,60 @@ g:hover path {
   fill: lime !important;
   cursor: pointer;
 }
+
+/* Flash effect when clicking on muscles */
+g:active path {
+  fill: var(--bright-lime) !important;
+}
+
+/* Class for selected muscles */
+g.selected path {
+  fill: lime !important;
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--lime), var(--bright-lime));
+  border-radius: 10px;
+  transition: background-color 475ms cubic-bezier(.075, .82, .165, 1);
+  box-shadow: 0 0 3px rgba(0, 255, 0, 0.2);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--bright-lime), var(--lime));
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
 /* --------------------- FROM HEREON OUT: STUFF COPIED STRAIT FROM WEBFLOW --------------------- */
+
+/* --------------------- VIBECODED SHIT --------------------- */
+
+/* Add this to remove the default margin and padding on body */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+/* Ensure the app container takes full height */
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}

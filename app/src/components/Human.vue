@@ -1,30 +1,117 @@
 <script setup lang="ts">
 import { useAllExercisesStore } from "@/dal/Exercise.ts";
 import { useBusinessLogicStore } from "@/bll/WorkoutPlan.ts";
-import { computed, watch } from "vue";
+import { computed, watch, ref, onMounted, onUnmounted } from "vue";
+import { setCSSTintForMuscle } from "@/bll/CSSHelper.ts";
+import { useMuscleStore } from "@/dal/Muscle.ts";
 
 const allExercisesStore = useAllExercisesStore();
 const bllStore = useBusinessLogicStore();
+const muscleStore = useMuscleStore();
+
+// Track selected muscles
+const selectedMuscles = ref<string[]>([]);
 
 const notifyExerciseSelector = (muscle: string) => {
-  allExercisesStore.loadAllExercisesByTargetMuscle(muscle)
+  console.log(`[Human] Muscle clicked: ${muscle}`);
+  allExercisesStore.loadAllExercisesByTargetMuscle(muscle);
+  muscleStore.loadMuscleByName(muscle);
+  
+  const elementId = getMuscleElementId(muscle);
+  const element = document.getElementById(elementId);
+  
+  // Clear previous selections
+  selectedMuscles.value.forEach(selectedMuscle => {
+    if (selectedMuscle !== muscle) {
+      const prevElement = document.getElementById(getMuscleElementId(selectedMuscle));
+      prevElement?.classList.remove('selected');
+    }
+  });
+
+  // Add selected class to highlight the muscle temporarily
+  element?.classList.add('selected');
+  
+  // Store the muscle in the selected array
+  selectedMuscles.value = [muscle];
+  
+  // Remove the selected class after 750ms to create the fade-out effect
+  setTimeout(() => {
+    element?.classList.remove('selected');
+    // Keep the muscle in selectedMuscles for data purposes but visually fade it out
+  }, 750);
 }
 
-function changeColourOfElement(elementId: string, fillValue: string) {
-  const svgMuscle = document.getElementById(elementId) as SVGElement
-  svgMuscle!.style.fill = fillValue
+// Add click outside handler
+const handleClickOutside = (event: MouseEvent) => {
+  // Check if the click was outside the SVG
+  const svg = document.querySelector('svg');
+  if (svg && !svg.contains(event.target as Node)) {
+    // Deselect all muscles
+    selectedMuscles.value.forEach(muscle => {
+      const element = document.getElementById(getMuscleElementId(muscle));
+      element?.classList.remove('selected');
+    });
+    selectedMuscles.value = [];
+  }
 }
 
-function getFillValueBySets(amountSets: number) {
+// Setup event listeners
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside);
+});
 
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+// Map muscle names to SVG IDs
+const getMuscleElementId = (muscleName: string): string => {
+  const muscleIdMap: Record<string, string> = {
+    'front delts': 'frontdelts',
+    'anterior delts': 'frontdelts',
+    'side delts': 'sidedelts',
+    'lateral delts': 'sidedelts', 
+    'rear delts': 'reardelts',
+    'posterior delts': 'reardelts',
+    'forearm extensors': 'forearmextendors',
+    'forearm flexors': 'forearmflexors',
+    'lower back': 'lowerback',
+    'rotator cuff': 'rotatorcuff',
+    'trapezius': 'traps'
+  };
+  
+  return muscleIdMap[muscleName.toLowerCase()] || 
+         muscleName.toLowerCase().replace(/\s+/g, '');
 }
+
 // Watch for changes in the presetMuscleArray
 watch(
   () => bllStore.presetMuscleArray,
   (newArray) => {
-
+    // Only log muscles that have volume changes
+    const activeMuscles = newArray.filter(m => m.getTotalSetVolume() > 0);
+    if (activeMuscles.length > 0) {
+      console.log('[Human] Updating muscle volumes:', 
+        activeMuscles.map(m => `${m.nameOfMuscle}: ${m.getTotalSetVolume().toFixed(1)}`).join(', ')
+      );
+    }
+    
+    newArray.forEach(muscle => {
+      // Get the SVG ID using the mapping function
+      const elementId = getMuscleElementId(muscle.nameOfMuscle);
+      const totalVolume = muscle.getTotalSetVolume();
+      
+      // Set CSS tint based on volume, or reset it to default if zero
+      setCSSTintForMuscle(elementId, totalVolume);
+      
+      // Restore selected state for muscles in the selectedMuscles array
+      if (selectedMuscles.value.includes(muscle.nameOfMuscle)) {
+        const element = document.getElementById(elementId);
+        element?.classList.add('selected');
+      }
+    });
   },
-  { deep: true } // Required for array content changes
+  { deep: true }
 );
 </script>
 
@@ -37,16 +124,11 @@ watch(
     id="svg1"
     xml:space="preserve"
     xmlns="http://www.w3.org/2000/svg"
-    xmlns:svg="http://www.w3.org/2000/svg"
-    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns:cc="http://creativecommons.org/ns#"
-    xmlns:dc="http://purl.org/dc/elements/1.1/"><title
-   id="title25">Human Muscle Map</title><defs
-    id="defs1" /><g
-    id="layer1"
-    transform="translate(-620.07498)" />
+    xmlns:svg="http://www.w3.org/2000/svg">
+    <defs id="defs1" />
+    <g id="layer1" transform="translate(-620.07498)" />
 
-
+    <!-- Base body outline paths -->
     <path
       fill="#353535"
       opacity="1"
@@ -68,7 +150,9 @@ watch(
 
     <g
       id="chest"
-      style="display:inline" @click="notifyExerciseSelector('chest')"><path
+      style="display:inline" @click="notifyExerciseSelector('chest')">
+      <title>Pectoralis Major and Minor</title>
+      <path
      fill="#979797"
      opacity="1"
      stroke="none"
@@ -86,7 +170,9 @@ watch(
 
     <g
       id="tibialis"
-      style="display:inline" @click="notifyExerciseSelector('tibialis')"><path
+      style="display:inline" @click="notifyExerciseSelector('tibialis')">
+      <title>Tibialis Anterior</title>
+      <path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -104,7 +190,9 @@ watch(
 
     <g
       id="biceps"
-      style="display:inline" @click="notifyExerciseSelector('biceps')"><path
+      style="display:inline" @click="notifyExerciseSelector('biceps')">
+      <title>Biceps Brachii</title>
+      <path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -124,7 +212,9 @@ watch(
 
     <g
       id="frontdelts"
-      style="display:inline" @click="notifyExerciseSelector('anterior delts')"><path
+      style="display:inline" @click="notifyExerciseSelector('anterior delts')">
+      <title>Deltoideus</title>
+      <path
      fill="#959595"
      opacity="1"
      stroke="none"
@@ -152,7 +242,9 @@ watch(
 
     <g
       id="abductors"
-      style="display:inline" @click="notifyExerciseSelector('abductors')"><path
+      style="display:inline" @click="notifyExerciseSelector('abductors')">
+      <title>Gluteus Medius/Minimus</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -169,7 +261,9 @@ watch(
 
     <g
       id="abs"
-      style="display:inline" @click="notifyExerciseSelector('abdominals')"><path
+      style="display:inline" @click="notifyExerciseSelector('abs')">
+      <title>Rectus Abdominis</title>
+      <path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -231,16 +325,11 @@ watch(
 
 
 
-
-
-
-
-
-
-
     <g
       id="glutes"
-      style="display:inline" @click="notifyExerciseSelector('glutes')"><path
+      style="display:inline" @click="notifyExerciseSelector('glutes')">
+      <title>Gluteus Maximus</title>
+      <path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -256,7 +345,9 @@ watch(
 
     <g
       id="traps"
-      style="display:inline" @click="notifyExerciseSelector('trapezius')"><path
+      style="display:inline" @click="notifyExerciseSelector('trapezius')">
+      <title>Trapezius</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -284,7 +375,9 @@ watch(
 
     <g
       id="lats"
-      style="display:inline" @click="notifyExerciseSelector('lats')"><path
+      style="display:inline" @click="notifyExerciseSelector('lats')">
+      <title>Latissimus Dorsi</title>
+      <path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -302,7 +395,9 @@ watch(
 
     <g
       id="triceps"
-      style="display:inline" @click="notifyExerciseSelector('triceps')"><path
+      style="display:inline" @click="notifyExerciseSelector('triceps')">
+      <title>Triceps Brachii</title>
+      <path
      fill="#919191"
      opacity="1"
      stroke="none"
@@ -313,8 +408,8 @@ watch(
       opacity="1"
       stroke="none"
       d="m 29.066138,51.856339 c -0.87124,3.603922 -1.50903,7.117342 -0.42349,10.938197 -3.53928,-3.361948 -2.28038,-12.636612 1.83236,-14.747037 -0.47717,1.285399 -0.92656,2.495988 -1.40887,3.80884 z"
-      id="path46-3"
-      style="stroke-width:0.264583" /><path
+     id="path46-3"
+     style="stroke-width:0.264583" /><path
       fill="#969696"
       opacity="1"
       stroke="none"
@@ -330,7 +425,9 @@ watch(
 
     <g
       id="adductors"
-      style="display:inline" @click="notifyExerciseSelector('adductors')"><path
+      style="display:inline" @click="notifyExerciseSelector('adductors')">
+      <title>Adductor Longus, Brevis, Magnus</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -358,7 +455,9 @@ watch(
 
     <g
       id="forearmextendors"
-      style="display:inline" @click="notifyExerciseSelector('forearm extensors')"><path
+      style="display:inline" @click="notifyExerciseSelector('forearm extensors')">
+      <title>Extensor Group</title>
+      <path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -375,7 +474,9 @@ watch(
 
     <g
       id="rotatorcuff"
-      style="display:inline" @click="notifyExerciseSelector('rotator cuff')"><path
+      style="display:inline" @click="notifyExerciseSelector('rotator cuff')">
+      <title>Musculi Cuffiae Musculotendineae</title>
+      <path
      fill="#9c9c9c"
      opacity="1"
      stroke="none"
@@ -394,7 +495,9 @@ watch(
 
     <g
       id="calves"
-      style="display:inline" @click="notifyExerciseSelector('calves')"><path
+      style="display:inline" @click="notifyExerciseSelector('calves')">
+      <title>Gastrocnemius and Soleus</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -446,7 +549,9 @@ watch(
 
     <g
       id="reardelts"
-      style="display:inline" @click="notifyExerciseSelector('posterior delts')"><path
+      style="display:inline" @click="notifyExerciseSelector('posterior delts')">
+      <title>Deltoideus</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -462,7 +567,9 @@ watch(
 
     <g
       id="lowerback"
-      style="display:inline" @click="notifyExerciseSelector('lower back')"><path
+      style="display:inline" @click="notifyExerciseSelector('lower back')">
+      <title>Erector Spinae</title>
+      <path
      fill="#9a9a9a"
      opacity="1"
      stroke="none"
@@ -480,7 +587,9 @@ watch(
 
     <g
       id="quads"
-      style="display:inline" @click="notifyExerciseSelector('quads')"><path
+      style="display:inline" @click="notifyExerciseSelector('quads')">
+      <title>Quadriceps Femoris</title>
+      <path
      fill="#9d9d9d"
      opacity="1"
      stroke="none"
@@ -528,7 +637,9 @@ watch(
 
     <g
       id="obliques"
-      style="display:inline" @click="notifyExerciseSelector('obliques')"><path
+      style="display:inline" @click="notifyExerciseSelector('obliques')">
+      <title>External/Internal Obliques</title>
+      <path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -556,7 +667,9 @@ watch(
 
     <g
       id="hamstrings"
-      style="display:inline" @click="notifyExerciseSelector('hamstrings')"><path
+      style="display:inline" @click="notifyExerciseSelector('hamstrings')">
+      <title>Biceps Femoris</title>
+      <path
      id="path95-2"
      style="fill:#9b9b9b;fill-opacity:1;stroke-width:0.292513"
      d="m 131.64938,119.79557 c -0.47974,-1.48709 -0.31803,-2.95796 -0.0477,-4.43443 0.1418,1.42618 0.28361,2.85237 0.42295,4.39184 -0.0846,0.0949 -0.16677,0.0765 -0.37525,0.0426 z m 0.0139,-0.0899 c 0.38848,4.5583 1.18836,8.96342 2.81905,13.18548 0.1381,0.35757 0.1562,0.68001 -0.064,0.99962 -0.82335,1.19508 -1.41385,2.51131 -1.93236,3.89432 -0.43501,-0.32224 -0.39168,-0.74238 -0.45453,-1.11243 -1.2385,-7.29213 -2.52605,-14.57956 -2.55615,-22.01122 -0.0122,-3.01132 0.21517,-5.93525 2.99279,-7.90708 2.03496,-1.44461 2.50702,-1.32683 3.19596,1.06226 0.92953,3.22336 1.28507,6.55632 1.81888,9.85797 1.22251,7.56108 2.49309,15.11253 2.90861,22.77536 0.0213,0.3922 0.0494,0.78402 0.0934,1.47631 -4.35668,-6.8997 -7.38869,-13.99021 -8.46742,-21.95028 -0.19836,-0.23973 -0.22099,-0.46456 -0.25704,-0.66576 -0.12207,-0.68141 -0.17293,-1.36953 -0.12825,-1.95522 -0.12054,0.69228 0.16602,1.47782 0.031,2.35067 z" /><path
@@ -565,7 +678,9 @@ watch(
       d="m 161.24953,118.0003 c -0.35724,0 0.0354,-3.12944 0.20267,-4.74328 0.18048,1.4836 0.4399,2.96532 -0.0789,4.53731 -0.0522,0.10524 -0.0866,0.18477 -0.1238,0.20597 z m -0.0192,-0.16241 c -0.44148,5.45722 -1.9192,10.55018 -4.00089,15.49074 -1.2004,2.84893 -3.08093,5.32915 -4.31169,8.33273 -0.4512,-0.52572 -0.26513,-0.96205 -0.24461,-1.35385 0.54125,-10.32341 2.53666,-20.44751 4.21549,-30.61454 0.17932,-1.08587 0.54808,-2.12349 0.95584,-3.15422 0.34638,-0.87558 0.7959,-0.85577 1.5216,-0.51195 2.95418,1.39964 4.09374,3.88557 4.13188,6.96961 0.0556,4.49832 -0.15942,8.9822 -0.88428,13.43551 -0.60716,3.73024 -1.04651,7.48835 -1.9616,11.23831 -0.66127,-1.37713 -1.39057,-2.68779 -2.11103,-4.0024 -0.29601,-0.54014 0.13259,-1.10915 0.31202,-1.64062 1.53147,-4.53643 2.58384,-9.15441 2.45418,-14.10075 0.0771,-0.50402 0.17829,-0.88642 0.20947,-1.27324 0.0419,-0.5198 0.01,-1.04477 0.0116,-1.56751 -0.0189,0.89533 0.10489,1.80565 -0.29799,2.75218 z" /></g>
     <g
       id="forearmflexors"
-      style="display:inline" @click="notifyExerciseSelector('forearm flexors')"><path
+      style="display:inline" @click="notifyExerciseSelector('forearm flexors')">
+      <title>Flexor Group</title>
+      <path
      fill="#9b9b9b"
      opacity="1"
      stroke="none"
@@ -603,7 +718,9 @@ watch(
 
     <g
       id="sidedelts"
-      style="display:inline" @click="notifyExerciseSelector('lateral delts')"><path
+      style="display:inline" @click="notifyExerciseSelector('lateral delts')">
+      <title>Deltoideus</title>
+      <path
      fill="#919191"
      opacity="1"
      stroke="none"
@@ -623,5 +740,4 @@ watch(
 </template>
 
 <style scoped>
-
 </style>

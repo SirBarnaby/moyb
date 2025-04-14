@@ -1,4 +1,38 @@
+// Define a type for muscle data
+type MuscleData = {
+  id: number;
+  name: string;
+}
+
+// Define all muscles in a single, maintainable object
+const MUSCLES: Record<string, MuscleData> = {
+  abs: { id: 1, name: "Abs" },
+  abductors: { id: 2, name: "Abductors" },
+  adductors: { id: 3, name: "Adductors" },
+  frontdelts: { id: 4, name: "Front Delts" },
+  biceps: { id: 5, name: "Biceps" },
+  calves: { id: 6, name: "Calves" },
+  chest: { id: 7, name: "Chest" },
+  forearmextensors: { id: 8, name: "Forearm Extensors" },
+  forearmflexors: { id: 9, name: "Forearm Flexors" },
+  glutes: { id: 10, name: "Glutes" },
+  hamstrings: { id: 11, name: "Hamstrings" },
+  sidedelts: { id: 12, name: "Side Delts" },
+  lats: { id: 13, name: "Lats" },
+  lowerback: { id: 14, name: "Lower Back" },
+  obliques: { id: 15, name: "Obliques" },
+  reardelts: { id: 16, name: "Rear Delts" },
+  quads: { id: 17, name: "Quads" },
+  rotatorcuff: { id: 18, name: "Rotator Cuff" },
+  tibialis: { id: 19, name: "Tibialis" },
+  trapezius: { id: 20, name: "Trapezius" },
+  triceps: { id: 21, name: "Triceps" }
+}
+
 export class MuscleHelper {
+  static SYNERGIC_MULTIPLIER = 0.5;
+  static STABILIZING_MULTIPLIER = 0.3;
+
   id: number
   nameOfMuscle: string
   setsPrimary: number
@@ -11,32 +45,19 @@ export class MuscleHelper {
     this.setsPrimary = 0
     this.setsSynergic = 0
     this.setsStabilizing = 0
-  };
-  public static initializeMuscleList(): MuscleHelper[] {
-    const muscleList: MuscleHelper[] = []
-    muscleList.push(new MuscleHelper("Abdominals", 1))
-    muscleList.push(new MuscleHelper("Abductors", 2))
-    muscleList.push(new MuscleHelper("Adductors", 3))
-    muscleList.push(new MuscleHelper("Anterior Delts", 4))
-    muscleList.push(new MuscleHelper("Biceps", 5))
-    muscleList.push(new MuscleHelper("Calves", 6))
-    muscleList.push(new MuscleHelper("Chest", 7))
-    muscleList.push(new MuscleHelper("Forearm Extensors", 8))
-    muscleList.push(new MuscleHelper("Forearm Flexors", 9))
-    muscleList.push(new MuscleHelper("Glutes", 10))
-    muscleList.push(new MuscleHelper("Hamstrings", 11))
-    muscleList.push(new MuscleHelper("Lateral Delts", 12))
-    muscleList.push(new MuscleHelper("Lats", 13))
-    muscleList.push(new MuscleHelper("Lower Back", 14))
-    muscleList.push(new MuscleHelper("Obliques", 15))
-    muscleList.push(new MuscleHelper("Posterior Delts", 16))
-    muscleList.push(new MuscleHelper("Quads", 17))
-    muscleList.push(new MuscleHelper("Rotator Cuff", 18))
-    muscleList.push(new MuscleHelper("Tibialis", 19))
-    muscleList.push(new MuscleHelper("Trapezius", 20))
-    muscleList.push(new MuscleHelper("Triceps", 21))
-    return muscleList
   }
+
+  public static initializeMuscleList(): MuscleHelper[] {
+    return Object.entries(MUSCLES).map(([key, data]) => 
+      new MuscleHelper(data.name, data.id)
+    )
+  }
+
+  public static getMuscleNameById(id: number): string | undefined {
+    const muscle = Object.values(MUSCLES).find(m => m.id === id)
+    return muscle?.name
+  }
+
   public addPrimarySets(amount: number) {
     this.setsPrimary += amount
   }
@@ -47,6 +68,12 @@ export class MuscleHelper {
 
   public addStabilizingSets(amount: number) {
     this.setsStabilizing += amount
+  }
+
+  public getTotalSetVolume(): number {
+    return this.setsPrimary + 
+           (this.setsSynergic * MuscleHelper.SYNERGIC_MULTIPLIER) + 
+           (this.setsStabilizing * MuscleHelper.STABILIZING_MULTIPLIER)
   }
 }
 
