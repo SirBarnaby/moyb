@@ -3,7 +3,6 @@ type MuscleData = {
   id: number;
   name: string;
 }
-
 // Define all muscles in a single, maintainable object
 const MUSCLES: Record<string, MuscleData> = {
   abs: { id: 1, name: "Abs" },
@@ -26,19 +25,17 @@ const MUSCLES: Record<string, MuscleData> = {
   rotatorcuff: { id: 18, name: "Rotator Cuff" },
   tibialis: { id: 19, name: "Tibialis" },
   trapezius: { id: 20, name: "Trapezius" },
-  triceps: { id: 21, name: "Triceps" }
+  triceps: { id: 21, name: "Triceps" },
+  hipflexors: { id: 22, name: "Hip Flexors" }
 }
-
 export class MuscleHelper {
   static SYNERGIC_MULTIPLIER = 0.5;
-  static STABILIZING_MULTIPLIER = 0.3;
-
+  static STABILIZING_MULTIPLIER = 0.33;
   id: number
   nameOfMuscle: string
   setsPrimary: number
   setsSynergic: number
   setsStabilizing: number
-
   constructor(nameOfMuscle: string, id: number) {
     this.id = id
     this.nameOfMuscle = nameOfMuscle
@@ -46,35 +43,27 @@ export class MuscleHelper {
     this.setsSynergic = 0
     this.setsStabilizing = 0
   }
-
   public static initializeMuscleList(): MuscleHelper[] {
-    return Object.entries(MUSCLES).map(([key, data]) => 
+    return Object.entries(MUSCLES).map(([key, data]) =>
       new MuscleHelper(data.name, data.id)
     )
   }
-
   public static getMuscleNameById(id: number): string | undefined {
     const muscle = Object.values(MUSCLES).find(m => m.id === id)
     return muscle?.name
   }
-
   public addPrimarySets(amount: number) {
     this.setsPrimary += amount
   }
-
   public addSynergicSets(amount: number) {
     this.setsSynergic += amount
   }
-
   public addStabilizingSets(amount: number) {
     this.setsStabilizing += amount
   }
-
   public getTotalSetVolume(): number {
-    return this.setsPrimary + 
-           (this.setsSynergic * MuscleHelper.SYNERGIC_MULTIPLIER) + 
-           (this.setsStabilizing * MuscleHelper.STABILIZING_MULTIPLIER)
+    return this.setsPrimary +
+      (this.setsSynergic * MuscleHelper.SYNERGIC_MULTIPLIER) +
+      (this.setsStabilizing * MuscleHelper.STABILIZING_MULTIPLIER)
   }
 }
-
-

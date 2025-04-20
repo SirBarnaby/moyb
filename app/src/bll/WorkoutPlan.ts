@@ -12,8 +12,8 @@ export const useBusinessLogicStore
   const muscleLoads = ref<Map<string, number>>(new Map());
   const setsPerWeekMax = ref(20);
   const synergisticMultiplier = ref(0.5);
-  const stabilizingMultiplier = ref(0.25);
-  
+  const stabilizingMultiplier = ref(0.33);
+
   function addExerciseAndSetsToWeek(exerciseToAdd: Exercise, sets: number) {
     // If this exercise already exists, UPDATE EXISTING.
     if (exercisesArray.value?.includes(exerciseToAdd)) {
@@ -21,7 +21,7 @@ export const useBusinessLogicStore
       const index = exercisesArray.value?.indexOf(exerciseToAdd)
 
       newSets[index] += sets
-      
+
       // If sets are now zero or negative, remove the exercise
       if (newSets[index] <= 0) {
         exercisesArray.value.splice(index, 1)
@@ -41,15 +41,15 @@ export const useBusinessLogicStore
     exercisesArray.value.splice(indexToRemove, 1)
     exercisesArraySets.value.splice(indexToRemove, 1)
   }
-  
+
   function addMuscleLoadToPlan(exercise: Exercise, sets: number) {
     if (!exercise.muscleInExercises || !Array.isArray(exercise.muscleInExercises)) {
       console.error(`[WorkoutPlan] Exercise "${exercise.name}" has no muscleInExercises array`);
       return;
     }
-    
+
     console.log(`[WorkoutPlan] Adding exercise: ${exercise.name} (${sets} sets)`);
-    
+
     // For EACH muscle worked in the target exercise...
     exercise.muscleInExercises.forEach(function (muscleInExercise) {
       // subjectMuscle == The muscle in our already populated
@@ -60,7 +60,7 @@ export const useBusinessLogicStore
         console.error(`[WorkoutPlan] Could not find muscle with ID ${muscleInExercise.muscleId} for exercise "${exercise.name}"`);
         return;
       }
-      
+
       // Add sets based on movement category
       if (muscleInExercise.muscleMovementCategory === "primary") {
         subjectMuscle.addPrimarySets(sets)
@@ -70,10 +70,10 @@ export const useBusinessLogicStore
         subjectMuscle.addStabilizingSets(sets)
       }
     });
-    
+
     // Force Vue to detect the changes by creating a new array
     presetMuscleArray.value = [...presetMuscleArray.value];
-    
+
     // Add the exercise to the workout plan
     addExerciseAndSetsToWeek(exercise, sets);
   }
@@ -95,10 +95,10 @@ export const useBusinessLogicStore
     presetMuscleArray.value = [...presetMuscleArray.value];
   }
 
-  return { 
-    exercisesArray, 
-    exercisesArraySets, 
-    presetMuscleArray, 
+  return {
+    exercisesArray,
+    exercisesArraySets,
+    presetMuscleArray,
     muscleLoads,
     setsPerWeekMax,
     synergisticMultiplier,

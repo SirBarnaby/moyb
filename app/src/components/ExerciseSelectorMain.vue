@@ -38,7 +38,7 @@ onMounted(async () => {
     isLoading.value = false;
     shouldRender.value = true;
   }
-  
+
   // Add CSS for slow fade transition to all muscle elements
   addSlowFadeToMuscles();
 });
@@ -47,7 +47,7 @@ onMounted(async () => {
 const addSlowFadeToMuscles = () => {
   // Get all muscle groups from SVG
   const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
-  
+
   muscleGroups.forEach(group => {
     const paths = group.getElementsByTagName('path');
     for (let i = 0; i < paths.length; i++) {
@@ -69,18 +69,18 @@ watch(exercises, (newExercises) => {
 // Watch for muscle changes to reset loading state
 watch(targetMuscle, async (newMuscle, oldMuscle) => {
   if (!newMuscle) return;
-  
+
   // Only run transition if it's not the initial render or if changing muscles
   if (oldMuscle) {
     shouldRender.value = false;
     isLoading.value = true;
-    
+
     // Clear loaded images cache
     loadedImages.value = new Set();
-    
+
     // Wait for data to load
     await nextTick();
-    
+
     // Reveal content after a short delay
     setTimeout(() => {
       isLoading.value = false;
@@ -119,14 +119,14 @@ const showExerciseDossier = ref(false);
 // Function to show exercise detail
 const showExerciseDetails = (exercise: Exercise) => {
   emit('toggle-popup', false);
-  
+
   selectedExercise.value = exercise;
   selectedExerciseForHighlight.value = exercise; // Store the selected exercise for highlighting
   showExerciseDossier.value = true;
-  
+
   // Apply highlighting to the selected exercise
   highlightMusclesOnHover(exercise);
-  
+
   emit('exercise-selected', exercise);
 };
 
@@ -134,7 +134,7 @@ const showExerciseDetails = (exercise: Exercise) => {
 const handleAddToPlan = (data: { exercise: Exercise, sets: number }) => {
   bllStore.addMuscleLoadToPlan(data.exercise, data.sets);
   closeDossier();
-  
+
   emit('exercise-selected', data.exercise);
 };
 
@@ -149,24 +149,24 @@ const closeDossier = () => {
 // Function to highlight muscles on hover
 const highlightMusclesOnHover = (exercise: Exercise) => {
   hoveredExercise.value = exercise;
-  
+
   // Highlight related muscles
   if (exercise && exercise.muscleInExercises) {
     exercise.muscleInExercises.forEach(muscleInExercise => {
       const muscleName = MuscleHelper.getMuscleNameById(muscleInExercise.muscleId);
       if (muscleName) {
         const elementId = getMuscleElementId(muscleName);
-        
+
         // Use different intensity based on muscle role
         let intensity = 0;
-        if (muscleInExercise.muscleMovementCategory === "primary" || muscleInExercise.type === "Primary") {
+        if (muscleInExercise.muscleMovementCategory === "primary") {
           intensity = 15; // Primary - full intensity
-        } else if (muscleInExercise.muscleMovementCategory === "synergistic" || muscleInExercise.type === "Synergistic") {
-          intensity = 10; // Synergistic - medium intensity  
+        } else if (muscleInExercise.muscleMovementCategory === "synergistic") {
+          intensity = 10; // Synergistic - medium intensity
         } else {
           intensity = 5; // Stabilizing - low intensity
         }
-        
+
         setCSSTintForMuscle(elementId, intensity);
       }
     });
@@ -177,13 +177,13 @@ const highlightMusclesOnHover = (exercise: Exercise) => {
 const resetMuscleHighlighting = () => {
   if (hoveredExercise.value) {
     hoveredExercise.value = null;
-    
+
     // If there's a selected exercise, maintain its highlighting
     if (selectedExerciseForHighlight.value) {
       highlightMusclesOnHover(selectedExerciseForHighlight.value);
       return;
     }
-    
+
     // If a targetMuscle is selected, maintain its highlighting
     if (targetMuscle.value) {
       // Restore all muscles to their original state based on workout plan
@@ -195,7 +195,7 @@ const resetMuscleHighlighting = () => {
     } else {
       // Reset all muscles to default
       const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
-      
+
       muscleGroups.forEach(group => {
         setCSSTintForMuscle(group.id, 0);
       });
@@ -209,7 +209,7 @@ const getMuscleElementId = (muscleName: string): string => {
     'Front Delts': 'frontdelts',
     'Anterior Delts': 'frontdelts',
     'Side Delts': 'sidedelts',
-    'Lateral Delts': 'sidedelts', 
+    'Lateral Delts': 'sidedelts',
     'Rear Delts': 'reardelts',
     'Posterior Delts': 'reardelts',
     'Forearm Extensors': 'forearmextendors',
@@ -219,8 +219,8 @@ const getMuscleElementId = (muscleName: string): string => {
     'Trapezius': 'traps',
     'Abs': 'abs'
   };
-  
-  return muscleIdMap[muscleName] || 
+
+  return muscleIdMap[muscleName] ||
          muscleName.toLowerCase().replace(/\s+/g, '');
 };
 
@@ -268,12 +268,12 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
           </div>
         </div>
       </div>
-      
+
       <!-- Exercise content -->
       <div v-else-if="shouldRender && exercises.length > 0" class="exercise-content fade-in">
-        <div 
-          v-for="exercise in exercises" 
-          :key="exercise.id" 
+        <div
+          v-for="exercise in exercises"
+          :key="exercise.id"
           class="exerciseselectoritem"
           @click="showExerciseDetails(exercise)"
           @mouseenter="highlightMusclesOnHover(exercise)"
@@ -289,15 +289,29 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
             </div>
             <div class="muscles-container">
               <div class="muscle-list">
-                <span 
-                  v-for="(muscleInExercise, index) in exercise.muscleInExercises" 
-                  :key="index" 
-                  class="muscle-tag"
-                  :class="{
-                    'primary-muscle': muscleInExercise.type === 'Primary' || index === 0,
-                    'synergistic-muscle': muscleInExercise.type === 'Synergistic' || (index > 0 && index < 3),
-                    'stabilizing-muscle': muscleInExercise.type === 'Stabilizing' || index >= 3
-                  }"
+                <!-- Primary muscles first -->
+                <span
+                  v-for="muscleInExercise in exercise.muscleInExercises.filter(m => m.muscleMovementCategory?.toLowerCase() === 'primary')"
+                  :key="`primary-${muscleInExercise.muscleId}`"
+                  class="muscle-tag primary-muscle"
+                >
+                  {{ MuscleHelper.getMuscleNameById(muscleInExercise.muscleId) }}
+                </span>
+                
+                <!-- Synergistic muscles second -->
+                <span
+                  v-for="muscleInExercise in exercise.muscleInExercises.filter(m => m.muscleMovementCategory?.toLowerCase() === 'synergistic')"
+                  :key="`synergistic-${muscleInExercise.muscleId}`"
+                  class="muscle-tag synergistic-muscle"
+                >
+                  {{ MuscleHelper.getMuscleNameById(muscleInExercise.muscleId) }}
+                </span>
+                
+                <!-- Stabilizing muscles last -->
+                <span
+                  v-for="muscleInExercise in exercise.muscleInExercises.filter(m => m.muscleMovementCategory?.toLowerCase() === 'stabilizing')"
+                  :key="`stabilizing-${muscleInExercise.muscleId}`"
+                  class="muscle-tag stabilizing-muscle"
                 >
                   {{ MuscleHelper.getMuscleNameById(muscleInExercise.muscleId) }}
                 </span>
@@ -307,11 +321,11 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
           <div class="exerciseselectorcard2">
             <!-- Skeleton image while loading -->
             <div v-if="!isImageLoaded(exercise.id)" class="skeleton-img-placeholder pulse"></div>
-            
+
             <!-- Actual image with lazy loading -->
-            <img 
-              class="image-3" 
-              :src="exercise.imageUrl" 
+            <img
+              class="image-3"
+              :src="exercise.imageUrl"
               loading="lazy"
               @load="handleImageLoaded(exercise.id)"
               :class="{ 'image-loaded': isImageLoaded(exercise.id) }"
@@ -319,7 +333,7 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
           </div>
         </div>
       </div>
-      
+
       <!-- No exercises message -->
       <div v-else-if="shouldRender && exercises.length === 0" class="no-exercises-message">
         No exercises found for this muscle group
@@ -328,7 +342,7 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   </div>
 
   <!-- Exercise Dossier Component -->
-  <ExerciseDossier 
+  <ExerciseDossier
     :exercise="selectedExercise"
     :visible="showExerciseDossier"
     @close="closeDossier"
@@ -384,13 +398,13 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   transition: transform 0.3s;
 }
 
-.exerciseselectortopdivider { 
+.exerciseselectortopdivider {
   width: 100%;
   height: 80%;
-  display: flex; 
+  display: flex;
 }
 
-.exerciseselectortopleft { 
+.exerciseselectortopleft {
   width: 70%;
   height: 100%;
   margin-left: 15px;
@@ -621,15 +635,15 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   .exerciseselectorall {
     max-height: 70vh;
   }
-  
+
   .exerciseselectoritem {
     height: 130px;
   }
-  
+
   .exerciseselectorcard1 {
     width: 65%;
   }
-  
+
   .exerciseselectorcard2 {
     width: 35%;
   }
@@ -643,7 +657,7 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   font-weight: 500;
 }
 
-.exerciseselectortopright { 
+.exerciseselectortopright {
   width: 30%;
   display: flex;
   align-items: center;
@@ -689,16 +703,16 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   .exerciseselectortopdivider {
     flex-direction: column;
   }
-  
+
   .exerciseselectortopleft,
   .exerciseselectortopright {
     width: 100%;
   }
-  
+
   .exerciseselectortopright {
     margin-top: 10px;
   }
-  
+
   .describingtext {
     max-height: 80px;
   }
