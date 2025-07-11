@@ -7,7 +7,7 @@ import WorkoutLog from "@/components/WorkoutLog.vue";
 import OptionsMenu from "@/components/OptionsMenu.vue";
 import IntroSequence from "@/components/IntroSequence.vue";
 import { ref, watch } from "vue";
-import { useMuscleStore } from "@/dal/Muscle.ts";
+import { useMuscleStore } from "@/stores/muscle.store";
 import { ANIMATION_CONFIG } from '@/config/animations';
 
 const muscleStore = useMuscleStore();

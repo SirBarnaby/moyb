@@ -1,6 +1,6 @@
 // src/repositories/exercise.repository.ts
 import ApiServiceSingleton from "@/services/ApiServiceSingleton.ts";
-import type { Exercise } from '@/dal/Exercise';
+import type { Exercise } from '@/core/exercise/Exercise.entity';
 const BASE_URL = "/Exercise/"
 
 export class ExerciseRepository {

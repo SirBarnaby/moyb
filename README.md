@@ -1,3 +1,58 @@
+# MOYB – Map Of Your Body 🏋️‍♂️
+
+Visualise the impact of every workout on an interactive human silhouette.
+
+---
+
+## 🚀 Quick Start
+```
+npm install
+npm run dev
+```
+
+## 🗂️ Project Structure (AI-friendly)
+```text
+app/
+  src/
+    ├── api/                  # typed API clients & adapters
+    ├── common/               # reusable pure utils (rgb, math, …)
+    ├── core/                 # framework-free domain layer
+    ├── features/             # vertical slices = UI + state + logic
+    ├── router/               # vue-router setup
+    ├── stores/               # pinia modules
+    ├── ui/                   # presentational components
+    └── main.ts               # app bootstrap
+```
+Each directory is deliberately small to keep LLM context windows happy.
+
+## 📚 Domain Glossary
+| Term | Description |
+|------|-------------|
+| **Muscle** | Contractile tissue unit. Represented by `core/muscle/Muscle.ts`. |
+| **Exercise** | A mechanical stimulus applied to muscles. Represented by `core/exercise/Exercise.ts`. |
+| **Volume** | Sets × Reps × Load accumulated for a Muscle within a timeframe. |
+| **WorkoutPlan** | Aggregates Exercises into scheduled sessions. |
+
+## 🧠 Vibecoding Primer
+1. `core/` modules are **pure TS** with no Vue imports.
+2. Components are ≤ 200 LOC and scoped to `features/` or `ui/`.
+3. Complex files begin with a 3-line **AI-Primer** comment summarising intent & invariants.
+
+Stick to these rules and ChatGPT will write maintainable code ✨.
+
+## 📜 Useful Scripts
+| Command | Purpose |
+|---------|---------|
+| `npm run dev` | Vite dev server |
+| `npm run test` | Unit tests |
+| `npm run typecheck` | `vue-tsc --noEmit` template type safety |
+| `npm run lint` | ESLint + Prettier |
+| `npm run storybook` | Interactive component docs |
+
+## 📝 License
+MIT
+
+---
 # moyb.
 > Map-of-Your-Body.
 >> Marten Saluste 230655IADB

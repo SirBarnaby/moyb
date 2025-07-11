@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useMuscleStore } from "@/dal/Muscle.ts";
+import { useMuscleStore } from "@/stores/muscle.store";
 
 const props = defineProps<{
   isVisible: boolean;
@@ -74,7 +74,7 @@ const fiberTypeImage = computed(() => {
   if (!targetMuscle.value || !targetMuscle.value.dominantFiberType) {
     return "/musclefiber1.png";
   }
-  
+
   // Return different images based on fiber type
   switch(targetMuscle.value.dominantFiberType.toLowerCase()) {
     case 'i':
@@ -88,7 +88,7 @@ const fiberTypeImage = computed(() => {
 </script>
 
 <template>
-  <div 
+  <div
     class="exerciseselectorpopup"
     :class="{ 'popup-visible': isVisible }"
   >
@@ -97,7 +97,7 @@ const fiberTypeImage = computed(() => {
         <div class="statistictext">Endurance:</div>
         <div class="statisticmeter">
           <div class="meter-segments">
-            <div v-for="n in 3" :key="n" 
+            <div v-for="n in 3" :key="n"
               class="meter-segment"
               :class="{ 'segment-filled': n <= enduranceSegments }"
             ></div>
@@ -108,7 +108,7 @@ const fiberTypeImage = computed(() => {
         <div class="statistictext">Recovery speed:</div>
         <div class="statisticmeter">
           <div class="meter-segments">
-            <div v-for="n in 3" :key="n" 
+            <div v-for="n in 3" :key="n"
               class="meter-segment"
               :class="{ 'segment-filled': n <= recoverySegments }"
             ></div>
@@ -119,7 +119,7 @@ const fiberTypeImage = computed(() => {
         <div class="statistictext">Eccentric strength:</div>
         <div class="statisticmeter">
           <div class="meter-segments">
-            <div v-for="n in 3" :key="n" 
+            <div v-for="n in 3" :key="n"
               class="meter-segment"
               :class="{ 'segment-filled': n <= eccentricStrengthSegments }"
             ></div>
@@ -130,7 +130,7 @@ const fiberTypeImage = computed(() => {
         <div class="statistictext">Neural drive sensitivity:</div>
         <div class="statisticmeter">
           <div class="meter-segments">
-            <div v-for="n in 3" :key="n" 
+            <div v-for="n in 3" :key="n"
               class="meter-segment"
               :class="{ 'segment-filled': n <= neuralDriveSegments }"
             ></div>
@@ -141,7 +141,7 @@ const fiberTypeImage = computed(() => {
         <div class="statistictext">Motor unit recruitment speed:</div>
         <div class="statisticmeter">
           <div class="meter-segments">
-            <div v-for="n in 3" :key="n" 
+            <div v-for="n in 3" :key="n"
               class="meter-segment"
               :class="{ 'segment-filled': n <= motorUnitSegments }"
             ></div>
@@ -159,7 +159,7 @@ const fiberTypeImage = computed(() => {
           <div class="feature-label">Stretch Sensitivity:</div>
           <div class="statisticmeter stretch-sensitivity-meter">
             <div class="meter-segments">
-              <div v-for="n in 3" :key="n" 
+              <div v-for="n in 3" :key="n"
                 class="meter-segment stretch-sensitivity"
                 :class="{ 'segment-filled': n <= stretchSensitivitySegments }"
               ></div>
@@ -178,20 +178,20 @@ const fiberTypeImage = computed(() => {
   grid-template-rows: auto;
   grid-template-columns: 60% 40%;
   grid-auto-columns: 1fr;
-  height: 20%;
+  height: 100%; /* Fill the container */
   font-size: 100%;
   display: flex;
-  overflow: visible;
+  overflow: hidden; /* Prevent content from spilling out */
   box-shadow: 0 2px 14px 4px #00000070;
   position: absolute;
-  bottom: 80%;
+  top: 0;
   left: 0;
   width: 100%;
-  transform: translateY(100%);
+  transform: translateY(-100%);
   transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
   background-color: transparent;
   backdrop-filter: blur(4px);
-  z-index: -1;
+  z-index: 1; /* Ensure it's stacked correctly */
   opacity: 0;
   pointer-events: none;
 }
@@ -230,13 +230,13 @@ const fiberTypeImage = computed(() => {
   direction: ltr;
   text-align: right;
   text-transform: none;
-  white-space: nowrap;
+  white-space: normal;
   font-family: Inter, sans-serif;
   font-style: italic;
-  font-weight: 400;
+  font-weight: 500;
   padding-right: 10px;
   width: 100%;
-  font-size: 80%;
+  font-size: 90%;
 }
 
 .statisticmeter {

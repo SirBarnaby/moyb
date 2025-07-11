@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useBusinessLogicStore } from "@/bll/WorkoutPlan.ts";
+import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
 import { computed } from "vue";
 
-const bllStore = useBusinessLogicStore();
+const bllStore = useWorkoutPlanStore();
 
 // Get active muscles with volume
 const activeMuscles = computed(() => {

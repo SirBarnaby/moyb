@@ -2,8 +2,8 @@
 import DeepHeaderText from "@/components/DeepHeaderText.vue";
 import { ref } from "vue";
 import { exerciseRepository } from "@/main.ts";
-import { useAllExercisesStore } from "@/dal/Exercise.ts";
-import { useMuscleStore } from "@/dal/Muscle.ts";
+import { useAllExercisesStore } from "@/stores/exercise.store";
+import { useMuscleStore } from "@/stores/muscle.store";
 
 const showSearch = ref(false);
 const searchTerm = ref("");

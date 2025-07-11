@@ -1,5 +1,5 @@
 import ApiServiceSingleton from "@/services/ApiServiceSingleton.ts";
-import type { Muscle } from "@/dal/Muscle.ts";
+import type { Muscle } from "@/core/muscle/Muscle.entity";
 
 export class MuscleRepository {
   /**

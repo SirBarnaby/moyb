@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+
 :root{
   --white: #ffffff;
   --blueish-white: #cdd3dd;
@@ -8,13 +10,16 @@
   --scrollbar-thumb-hover: #b4ff00;
 }
 
-.body {
+body {
   display: flex;
   height: 100%;
   flex-direction: column;
   flex-wrap: nowrap;
   background-image: radial-gradient(circle farthest-corner at 50% 50%, var(--white), var(--blueish-white));
-  letter-spacing: -1px;
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow-x: hidden;
 }
 
 /* --------------------- FROM HEREON OUT: BODY GRAPHICS --------------------- */
@@ -71,7 +76,7 @@ g.selected path {
 /* --------------------- VIBECODED SHIT --------------------- */
 
 /* Add this to remove the default margin and padding on body */
-body, html {
+html {
   margin: 0;
   padding: 0;
   height: 100%;

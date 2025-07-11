@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { type Exercise } from "@/dal/Exercise.ts";
+import type { Exercise } from "@/core/exercise/Exercise.entity";
 import { ref, computed } from "vue";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 

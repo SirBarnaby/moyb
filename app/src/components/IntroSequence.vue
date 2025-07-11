@@ -20,6 +20,7 @@ onMounted(() => {
 });
 </script>
 
+
 <template>
   <div v-if="isVisible" class="intro-overlay" :class="{ 'fade-out': isFadingOut }">
     <div class="intro-content">

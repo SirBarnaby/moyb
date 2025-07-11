@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useBusinessLogicStore } from "@/bll/WorkoutPlan.ts";
+import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
 
-const bllStore = useBusinessLogicStore();
+const bllStore = useWorkoutPlanStore();
 const isOpen = ref(false);
 
 // Default values

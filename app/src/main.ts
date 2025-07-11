@@ -1,5 +1,5 @@
-import './assets/webflow-style.css'
 import './assets/main.css'
+import './assets/v0.css'
 
 import { ExerciseRepository } from "@/repositories/ExerciseRepository.ts";
 import { MuscleRepository } from "@/repositories/MuscleRepository.ts";

@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import Human from "@/components/Human.vue";
+import AnatomyViewer from "@/features/anatomy-viewer/index.vue";
 </script>
 
 <template>
   <section class="bodysection section">
     <div class="maincontainer container">
-      <Human></Human>
+      <AnatomyViewer />
     </div>
   </section>
 </template>

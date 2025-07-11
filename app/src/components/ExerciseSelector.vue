@@ -1,8 +1,11 @@
+<!-- AI-PRIMER: ExerciseSelector.vue
+  Purpose: Presents UI controls for choosing an Exercise either by currently selected muscle **or** via free-text search.
+  Invariants: Relies exclusively on Pinia `useAllExercisesStore` for state. No direct DOM queries or global mutations. -->
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import ExerciseSelectorPopup from "@/components/ExerciseSelectorPopup.vue";
 import ExerciseSelectorMain from "@/components/ExerciseSelectorMain.vue";
-import { useAllExercisesStore } from "@/dal/Exercise.ts";
+import { useAllExercisesStore } from "@/stores/exercise.store";
 
 const exerciseStore = useAllExercisesStore();
 
@@ -16,7 +19,7 @@ const isPopupVisible = ref(false);
 // Computed property to determine if we're showing search results
 const isShowingSearchResults = computed(() => {
   // Check if we have exercises from a search (not from muscle selection)
-  return exerciseStore.exercises.length > 0 && 
+  return exerciseStore.exercises.length > 0 &&
          (!props.isMuscleSelected || exerciseStore.isSearchActive);
 });
 
@@ -35,34 +38,19 @@ const onExerciseSelected = () => {
 </script>
 
 <template>
-  <div class="exerciseselector" v-if="isMuscleSelected || isShowingSearchResults">
-    <ExerciseSelectorMain 
-      @toggle-popup="togglePopup" 
+  <div v-if="isMuscleSelected || isShowingSearchResults">
+    <ExerciseSelectorMain
+      @toggle-popup="togglePopup"
       @exercise-selected="onExerciseSelected"
       :is-search-mode="isShowingSearchResults"
     />
-    <ExerciseSelectorPopup 
-      :is-visible="isPopupVisible" 
-      @exercise-selected="onExerciseSelected" 
+    <ExerciseSelectorPopup
+      :is-visible="isPopupVisible"
+      @exercise-selected="onExerciseSelected"
     />
   </div>
 </template>
 
 <style scoped>
-.exerciseselector {
-  position: absolute;
-  left: 47px;
-  top: 107px;
-  overflow: visible;
-  width: 30%;
-  height: 70%;
-  flex-grow: 0;
-  flex-shrink: 1;
-  flex-basis: auto;
-  backdrop-filter: blur(4px);
-  overflow-wrap: normal;
-  object-fit: fill;
-  display: flex;
-  flex-direction: column;
-}
+
 </style>
