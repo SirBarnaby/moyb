@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AnatomyViewer from "@/features/anatomy-viewer/index.vue";
+import AnatomyViewer from "@/features/anatomy-viewer/AnatomyViewer.vue";
 </script>
 
 <template>

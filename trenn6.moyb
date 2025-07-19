@@ -1,0 +1,127 @@
+{
+  "exercises": [
+    {
+      "name": "Bench Press",
+      "sets": 5,
+      "muscleInExercises": [
+        {
+          "exerciseId": -1,
+          "muscleId": 4,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "primary"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 7,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "primary"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 21,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        }
+      ]
+    },
+    {
+      "name": "Pull Up",
+      "sets": 2,
+      "muscleInExercises": [
+        {
+          "exerciseId": -1,
+          "muscleId": 5,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 9,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "stabilizing"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 13,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "primary"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 16,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 18,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "stabilizing"
+        }
+      ]
+    },
+    {
+      "name": "Deadlift",
+      "sets": 2,
+      "muscleInExercises": [
+        {
+          "exerciseId": -1,
+          "muscleId": 3,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 9,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "stabilizing"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 10,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "primary"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 11,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 14,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "primary"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 17,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "synergistic"
+        },
+        {
+          "exerciseId": -1,
+          "muscleId": 20,
+          "contractionType": "[omitted]",
+          "fatigueAccumulationFactor": "[omitted]",
+          "muscleMovementCategory": "stabilizing"
+        }
+      ]
+    }
+  ]
+}

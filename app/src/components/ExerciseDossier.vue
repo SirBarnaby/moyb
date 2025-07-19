@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Exercise } from "@/core/exercise/Exercise.entity";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 
 // Define props for the component
@@ -14,9 +14,62 @@ const setsPerWeek = ref(3);
 
 // Define emits for interactions
 const emit = defineEmits([
-  'close', 
+  'close',
   'add-to-plan'
 ]);
+
+// Draggability state
+const x = ref(0);
+const y = ref(0);
+const isDragging = ref(false);
+const offsetX = ref(0);
+const offsetY = ref(0);
+
+// Draggability methods
+const startDrag = (event: MouseEvent) => {
+  isDragging.value = true;
+  offsetX.value = event.clientX - x.value;
+  offsetY.value = event.clientY - y.value;
+  document.addEventListener('mousemove', doDrag);
+  document.addEventListener('mouseup', stopDrag);
+};
+
+const doDrag = (event: MouseEvent) => {
+  if (isDragging.value) {
+    x.value = event.clientX - offsetX.value;
+    y.value = event.clientY - offsetY.value;
+  }
+};
+
+const stopDrag = () => {
+  isDragging.value = false;
+  document.removeEventListener('mousemove', doDrag);
+  document.removeEventListener('mouseup', stopDrag);
+  localStorage.setItem('dossierPosition', JSON.stringify({ x: x.value, y: y.value }));
+};
+
+// Load position from localStorage or center on mount
+onMounted(() => {
+  const savedPosition = localStorage.getItem('dossierPosition');
+  if (savedPosition) {
+    const { x: savedX, y: savedY } = JSON.parse(savedPosition);
+    x.value = savedX;
+    y.value = savedY;
+  } else {
+    /* Center the dossier initially */
+    const card = document.querySelector('.exercise-card') as HTMLElement;
+    if (card) {
+      // Position with some margin from the top and centered horizontally
+      x.value = window.innerWidth / 2 - card.offsetWidth / 2;
+      y.value = Math.min(40, window.innerHeight * 0.1); // 40px from top or 10% of viewport height, whichever is smaller
+    }
+  }
+});
+
+onUnmounted(() => {
+  document.removeEventListener('mousemove', doDrag);
+  document.removeEventListener('mouseup', stopDrag);
+});
 
 // Function to add exercise to plan with specified sets
 const addExerciseToPlan = () => {
@@ -27,14 +80,18 @@ const addExerciseToPlan = () => {
 };
 
 // Function to close the dossier
-const closeExerciseDetail = () => {
+const closeExerciseDetail = (event?: MouseEvent) => {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   emit('close');
 };
 
 // Helper function to get meter segments based on value
 const getMeterSegments = (value: string | undefined) => {
   if (!value) return 0;
-  
+
   switch(value) {
     case '1': return 1; // One segment for low values
     case '2': return 2; // Two segments for medium values
@@ -44,20 +101,20 @@ const getMeterSegments = (value: string | undefined) => {
 };
 
 // Computed values for the meters
-const injuryRiskSegments = computed(() => 
+const injuryRiskSegments = computed(() =>
   getMeterSegments(props.exercise?.injuryRiskFactor)
 );
 
-const jointStressSegments = computed(() => 
+const jointStressSegments = computed(() =>
   getMeterSegments(props.exercise?.jointStressFactor)
 );
 
-const cnsFatigueSegments = computed(() => 
+const cnsFatigueSegments = computed(() =>
   getMeterSegments(props.exercise?.cnsFatigueFactor)
 );
 
 // Emoji mapping based on muscle roles
-const getEmoji = (muscleInExercise: any) => {
+const getEmoji = (muscleInExercise: MuscleInExercise) => {
   // Use muscleMovementCategory to determine the role
   if (muscleInExercise.muscleMovementCategory === 'primary') return '💥'; // Primary muscles
   if (muscleInExercise.muscleMovementCategory === 'synergistic') return '🔥'; // Synergic muscles
@@ -66,12 +123,14 @@ const getEmoji = (muscleInExercise: any) => {
 };
 
 // Add state for popup
-const selectedMuscle = ref<any>(null);
+import type { MuscleInExercise } from "@/core/muscle/MuscleInExercise.entity";
+
+const selectedMuscle = ref<MuscleInExercise | null>(null);
 const popupVisible = ref(false);
 const popupPosition = ref({ top: 0, left: 0 });
 
 // Function to handle mouse movement
-const handleMouseMove = (muscle: any, event: MouseEvent) => {
+const handleMouseMove = (muscle: MuscleInExercise, event: MouseEvent) => {
   selectedMuscle.value = muscle;
   popupPosition.value = {
     top: event.clientY + 10,
@@ -88,9 +147,9 @@ const hidePopup = () => {
 </script>
 
 <template>
-  <div v-if="visible && exercise" class="exercise-card">
+  <div v-if="visible && exercise" class="exercise-card" :style="{ left: `${x}px`, top: `${y}px` }">
     <!-- Header with logo and title -->
-    <div class="card-header">
+    <div class="card-header" @mousedown="startDrag">
       <div class="logo"></div>
       <h1 class="title">{{ exercise.name }}</h1>
     </div>
@@ -120,44 +179,44 @@ const hidePopup = () => {
     <!-- Statistics section with meters -->
     <div class="stats-section">
       <h2 class="section-title"><strong>Exercise Statistics</strong></h2>
-      
+
       <div class="stat-meters">
         <div class="stat-meter" v-if="exercise.injuryRiskFactor" title="Is the exercise generally considered to be injury prone?">
           <div class="stat-label">Injury Risk:</div>
           <div class="meter-container">
             <div class="meter-segments">
-              <div v-for="n in 3" :key="`injury-${n}`" 
+              <div v-for="n in 3" :key="`injury-${n}`"
                 class="meter-segment"
                 :class="{ 'segment-filled': n <= injuryRiskSegments }"
               ></div>
             </div>
           </div>
         </div>
-        
+
         <div class="stat-meter" v-if="exercise.jointStressFactor" title="Is the exercise generally considered to be hard on its respective joints?">
           <div class="stat-label">Joint Stress:</div>
           <div class="meter-container">
             <div class="meter-segments">
-              <div v-for="n in 3" :key="`joint-${n}`" 
+              <div v-for="n in 3" :key="`joint-${n}`"
                 class="meter-segment"
                 :class="{ 'segment-filled': n <= jointStressSegments }"
               ></div>
             </div>
           </div>
         </div>
-        
+
         <div class="stat-meter" v-if="exercise.cnsFatigueFactor" title="Central Nervous System Fatigue. Generally, how hard is the exercise to perform?">
           <div class="stat-label">CNS Fatigue:</div>
           <div class="meter-container">
             <div class="meter-segments">
-              <div v-for="n in 3" :key="`cns-${n}`" 
+              <div v-for="n in 3" :key="`cns-${n}`"
                 class="meter-segment"
                 :class="{ 'segment-filled': n <= cnsFatigueSegments }"
               ></div>
             </div>
           </div>
         </div>
-        
+
         <div class="stat-meter" v-if="exercise.rangeOfMotion" title="The range of motion of the exercise. How much can the muscle stretch or contract?">
           <div class="stat-label">Range of Motion:</div>
           <div class="stat-value">{{ exercise.rangeOfMotion }}</div>
@@ -170,8 +229,8 @@ const hidePopup = () => {
       <h2 class="section-title"><strong>Muscles Worked</strong></h2>
 
       <div class="muscle-grid">
-        <div v-for="muscleInExercise in exercise.muscleInExercises" 
-             :key="muscleInExercise.muscleId" 
+        <div v-for="muscleInExercise in exercise.muscleInExercises"
+             :key="muscleInExercise.muscleId"
              class="muscle-item"
              @mouseenter="handleMouseMove(muscleInExercise, $event)"
              @mousemove="handleMouseMove(muscleInExercise, $event)"
@@ -211,8 +270,8 @@ const hidePopup = () => {
 
   <!-- Muscle Details Popup - Moved outside the exercise card -->
   <Teleport to="body">
-    <div v-if="popupVisible" 
-         class="muscle-details-popup" 
+    <div v-if="popupVisible"
+         class="muscle-details-popup"
          :style="{ top: `${popupPosition.top}px`, left: `${popupPosition.left}px` }">
       <div class="popup-content">
         <div class="popup-details">
@@ -246,20 +305,25 @@ const hidePopup = () => {
   width: 90%;
   margin: 0 auto;
   background-color: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(24px);
+  box-shadow: 17px 17px 20px 10px rgba(0, 0, 0, 0.4);
   border-radius: 6px;
-  overflow: hidden;
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: absolute;
   z-index: 10;
   display: flex;
   flex-direction: column;
-  max-height: 90vh;
-  overflow-y: auto;
+  min-width: 400px; /* Ensure minimum width for readability */
+  overflow: visible; /* Allow content to expand */
+}
+
+/* Ensure content sections don't cause overflow */
+.details-section,
+.stats-section,
+.muscles-section,
+.sets-section,
+.description-section {
+  overflow: visible; /* Allow content to expand */
+  min-height: fit-content; /* Ensure sections take up needed space */
 }
 
 .card-header {
@@ -267,6 +331,11 @@ const hidePopup = () => {
   border-bottom: 1px solid #e1e0e0;
   display: flex;
   align-items: center;
+  cursor: grab;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(24px) contrast(1.5);
 }
 
 .logo {
@@ -289,7 +358,7 @@ const hidePopup = () => {
 
 .details-section,
 .stats-section,
-.muscles-section, 
+.muscles-section,
 .sets-section {
   padding: 6px 16px;
   border-bottom: 1px solid #e1e0e0;
@@ -385,17 +454,19 @@ const hidePopup = () => {
 
 .muscle-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  max-height: none;
-  overflow: hidden;
-  padding: 2px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+  width: 100%;
+  overflow: visible;
 }
 
 .muscle-item {
   display: flex;
   align-items: center;
-  overflow: hidden;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: ellipsis;
 }
 
 .muscle-icon {
@@ -438,10 +509,13 @@ const hidePopup = () => {
 }
 
 .description-text {
-  color: #333333;
+  color: #000000;
   font-size: 14px;
-  line-height: 1.3;
+  line-height: 1.5;
   margin: 0;
+  white-space: pre-line;
+  word-wrap: break-word; /* Ensure long words break and wrap */
+  overflow-wrap: break-word; /* Alternative for better browser support */
 }
 
 .sets-section {
@@ -450,8 +524,7 @@ const hidePopup = () => {
   border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   margin: 10px 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(48px) contrast(1.5);
 }
 
 .sets-controls {

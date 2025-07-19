@@ -3,6 +3,7 @@ type MuscleData = {
   id: number;
   name: string;
 }
+
 // Define all muscles in a single, maintainable object
 const MUSCLES: Record<string, MuscleData> = {
   abs: { id: 1, name: "Abs" },
@@ -28,6 +29,11 @@ const MUSCLES: Record<string, MuscleData> = {
   triceps: { id: 21, name: "Triceps" },
   hipflexors: { id: 22, name: "Hip Flexors" }
 }
+
+const UPPER_BODY_MUSCLES = [4, 5, 7, 8, 9, 12, 13, 16, 18, 20, 21];
+const LOWER_BODY_MUSCLES = [2, 3, 6, 10, 11, 17, 19, 22];
+const CORE_MUSCLES = [1, 14, 15];
+
 export class MuscleHelper {
   static SYNERGIC_MULTIPLIER = 0.5;
   static STABILIZING_MULTIPLIER = 0.33;
@@ -36,31 +42,56 @@ export class MuscleHelper {
   setsPrimary: number
   setsSynergic: number
   setsStabilizing: number
+  bodyPart: 'upper' | 'lower' | 'core' | undefined;
+
   constructor(nameOfMuscle: string, id: number) {
     this.id = id
     this.nameOfMuscle = nameOfMuscle
     this.setsPrimary = 0
     this.setsSynergic = 0
     this.setsStabilizing = 0
+    this.bodyPart = MuscleHelper.getMuscleBodyPart(id);
   }
+
   public static initializeMuscleList(): MuscleHelper[] {
-    return Object.entries(MUSCLES).map(([key, data]) =>
+    return Object.entries(MUSCLES).map(([, data]) =>
       new MuscleHelper(data.name, data.id)
     )
   }
+
   public static getMuscleNameById(id: number): string | undefined {
     const muscle = Object.values(MUSCLES).find(m => m.id === id)
     return muscle?.name
   }
+
+  public static getMuscleIdByName(name: string): number | undefined {
+    const muscle = Object.values(MUSCLES).find(m => m.name.toLowerCase() === name.toLowerCase())
+    return muscle?.id
+  }
+
+  public static getMuscleBodyPart(id: number): 'upper' | 'lower' | 'core' | undefined {
+    if (UPPER_BODY_MUSCLES.includes(id)) {
+      return 'upper';
+    } else if (LOWER_BODY_MUSCLES.includes(id)) {
+      return 'lower';
+    } else if (CORE_MUSCLES.includes(id)) {
+      return 'core';
+    }
+    return undefined;
+  }
+
   public addPrimarySets(amount: number) {
     this.setsPrimary += amount
   }
+
   public addSynergicSets(amount: number) {
     this.setsSynergic += amount
   }
+
   public addStabilizingSets(amount: number) {
     this.setsStabilizing += amount
   }
+
   public getTotalSetVolume(): number {
     return this.setsPrimary +
       (this.setsSynergic * MuscleHelper.SYNERGIC_MULTIPLIER) +

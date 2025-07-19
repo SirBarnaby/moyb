@@ -3,26 +3,23 @@ import HeaderSection from "@/components/HeaderSection.vue";
 import FooterSection from "@/components/FooterSection.vue";
 import BodySection from "@/components/BodySection.vue";
 import ExerciseSelector from "@/components/ExerciseSelector.vue";
-import WorkoutLog from "@/components/WorkoutLog.vue";
+// import WorkoutLog from "@/components/WorkoutLog.vue";
+import WorkoutLog from "@/components/WorkoutLogTest.vue";
 import OptionsMenu from "@/components/OptionsMenu.vue";
 import IntroSequence from "@/components/IntroSequence.vue";
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useMuscleStore } from "@/stores/muscle.store";
+import { useAllExercisesStore } from "@/stores/exercise.store";
 import { ANIMATION_CONFIG } from '@/config/animations';
 
 const muscleStore = useMuscleStore();
-const isMuscleSelected = ref(false);
+const exerciseStore = useAllExercisesStore();
 const showIntro = ref(true);
 const showMainContent = ref(false);
 
-// Watch for changes in the selected muscle
-watch(
-  () => muscleStore.muscle,
-  (newMuscle) => {
-    isMuscleSelected.value = !!newMuscle;
-  },
-  { immediate: true }
-);
+const showExerciseSelector = computed(() => {
+  return !!muscleStore.muscle || exerciseStore.isSearchActive;
+});
 
 const handleIntroComplete = () => {
   showMainContent.value = true;
@@ -39,7 +36,10 @@ const handleIntroComplete = () => {
       <HeaderSection/>
       <BodySection/>
       <FooterSection/>
-      <ExerciseSelector :is-muscle-selected="isMuscleSelected" />
+      <ExerciseSelector 
+        :is-visible="showExerciseSelector" 
+        :is-search-mode="exerciseStore.isSearchActive" 
+      />
       <WorkoutLog/>
       <OptionsMenu/>
     </div>

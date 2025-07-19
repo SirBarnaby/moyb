@@ -3,36 +3,36 @@ import DeepHeaderText from "@/components/DeepHeaderText.vue";
 import { ref } from "vue";
 import { exerciseRepository } from "@/main.ts";
 import { useAllExercisesStore } from "@/stores/exercise.store";
-import { useMuscleStore } from "@/stores/muscle.store";
-
 const showSearch = ref(false);
 const searchTerm = ref("");
 const isLoading = ref(false);
 const searchError = ref("");
 const exerciseStore = useAllExercisesStore();
-const muscleStore = useMuscleStore();
 
 // Toggle search visibility
 const toggleSearch = () => {
-  showSearch.value = !showSearch.value;
-  if (!showSearch.value) {
-    searchTerm.value = "";
-    searchError.value = "";
-  }
+  // showSearch.value = !showSearch.value;
+  // if (!showSearch.value) {
+  //   searchTerm.value = "";
+  //   searchError.value = "";
+  // }
 };
 
 // Handle search function
 const handleSearch = async () => {
-  if (searchTerm.value.trim()) {
+  const term = searchTerm.value.trim();
+  if (term) {
     try {
       isLoading.value = true;
       searchError.value = "";
-      const results = await exerciseRepository.search(searchTerm.value);
-      exerciseStore.setSearchResults(results);
-      
-      // Close the search panel if results were found
+      const results = await exerciseRepository.search(term);
+
       if (results && results.length > 0) {
-        toggleSearch();
+        // Set search results in the store
+        exerciseStore.setSearchResults(results);
+        // Don't close the search panel - let the ExerciseSelector component handle the display
+      } else {
+        searchError.value = "No exercises found. Try a different search term.";
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -49,18 +49,19 @@ const handleKeyPress = (event: KeyboardEvent) => {
     handleSearch();
   }
 };
+// msg="Not sure what exercise to select? Click here to search!"
 </script>
 
 <template>
   <section class="footersectionabsolute section" :class="{ 'expanded': showSearch }">
     <!-- Default state - click to search -->
     <div v-if="!showSearch" @click="toggleSearch" class="search-prompt">
-      <DeepHeaderText 
-        msg="Not sure what exercise to select? Click here to search!"
+      <DeepHeaderText
+        msg="Search currently omitted..."
         img_url="/dot.png">
       </DeepHeaderText>
     </div>
-    
+
     <!-- Search state - with input field and button -->
     <div v-else class="search-container">
       <input
@@ -83,33 +84,24 @@ const handleKeyPress = (event: KeyboardEvent) => {
 
 <style scoped>
 .footersectionabsolute {
-  position: static;
-  left: 0%;
-  top: auto;
-  right: 0%;
-  bottom: 0%;
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 28px;
   display: flex;
   width: 100%;
-  height: 5vh;
-  margin-bottom: 28px;
+  min-height: 5vh;
+  padding: 20px 0;
   justify-content: center;
   align-items: center;
-  align-self: center;
-  flex-grow: 0;
-  flex-shrink: 1;
-  flex-basis: auto;
-  transition: height 0.3s ease;
-}
-
-.expanded {
-  height: 15vh;
+  z-index: 100;
 }
 
 .search-prompt {
-  cursor: pointer;
   width: 100%;
   display: flex;
   justify-content: center;
+  padding: 10px 0;
 }
 
 .search-container {
@@ -118,12 +110,12 @@ const handleKeyPress = (event: KeyboardEvent) => {
   align-items: center;
   width: 100%;
   gap: 10px;
-  padding: 0 20px;
+  padding: 10px 20px;
   flex-wrap: wrap;
 }
 
 .search-input {
-  width: 60%;
+  width: 35%;
   height: 40px;
   padding: 8px 16px;
   border-radius: 20px;
@@ -144,7 +136,6 @@ const handleKeyPress = (event: KeyboardEvent) => {
   border-radius: 20px;
   border: none;
   font-weight: 600;
-  cursor: pointer;
   transition: all 0.2s ease;
 }
 

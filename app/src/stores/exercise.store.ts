@@ -33,9 +33,14 @@ export const useAllExercisesStore = defineStore("exercise", () => {
    * Sets the exercises list from search results.
    * Ensures that the raw data is converted to Exercise entities.
    */
-  function setSearchResults(results: any[]) {
+  function setSearchResults(results: Omit<Exercise, 'isCalisthenics' | 'isSpecial' | 'getAffectedMuscles'>[]) {
     isSearchActive.value = true;
     exercises.value = results.map(Exercise.create);
+  }
+
+  function clearSearchResults() {
+    exercises.value = [];
+    isSearchActive.value = false;
   }
 
   return {
@@ -43,5 +48,6 @@ export const useAllExercisesStore = defineStore("exercise", () => {
     isSearchActive,
     loadAllExercisesByTargetMuscle,
     setSearchResults,
+    clearSearchResults,
   };
 });

@@ -38,6 +38,20 @@ export const useWorkoutPlanStore = defineStore("workoutPlan", () => {
     recalcMuscleVolumes(exercise, sets);
   }
 
+  function updateExerciseSets(exercise: Exercise, newSetCount: number) {
+    const idx = indexOfExercise(exercise);
+    if (idx < 0) return;
+
+    if (newSetCount <= 0) {
+      removeExercise(exercise);
+    } else {
+      const oldSetCount = exerciseSets.value[idx];
+      const diff = newSetCount - oldSetCount;
+      exerciseSets.value[idx] = newSetCount;
+      recalcMuscleVolumes(exercise, diff);
+    }
+  }
+
   function removeExercise(exercise: Exercise) {
     const idx = indexOfExercise(exercise);
     if (idx >= 0) {
@@ -99,6 +113,15 @@ export const useWorkoutPlanStore = defineStore("workoutPlan", () => {
     }
   }
 
+  /**
+   * Reset the entire workout plan to initial state
+   */
+  function reset() {
+    exercises.value = [];
+    exerciseSets.value = [];
+    presetMuscles.value = MuscleHelper.initializeMuscleList();
+  }
+
   return {
     /* state */
     exercises,
@@ -116,5 +139,7 @@ export const useWorkoutPlanStore = defineStore("workoutPlan", () => {
     removeExercise,
     addMuscleLoadToPlan,
     updateMultipliers,
+    updateExerciseSets,
+    reset,
   };
 });

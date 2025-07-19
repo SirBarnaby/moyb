@@ -2,26 +2,19 @@
   Purpose: Presents UI controls for choosing an Exercise either by currently selected muscle **or** via free-text search.
   Invariants: Relies exclusively on Pinia `useAllExercisesStore` for state. No direct DOM queries or global mutations. -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import ExerciseSelectorPopup from "@/components/ExerciseSelectorPopup.vue";
 import ExerciseSelectorMain from "@/components/ExerciseSelectorMain.vue";
 import { useAllExercisesStore } from "@/stores/exercise.store";
 
 const exerciseStore = useAllExercisesStore();
 
-// Add props to determine visibility based on muscle selection
 const props = defineProps<{
-  isMuscleSelected: boolean
+  isVisible: boolean;
+  isSearchMode: boolean;
 }>();
 
 const isPopupVisible = ref(false);
-
-// Computed property to determine if we're showing search results
-const isShowingSearchResults = computed(() => {
-  // Check if we have exercises from a search (not from muscle selection)
-  return exerciseStore.exercises.length > 0 &&
-         (!props.isMuscleSelected || exerciseStore.isSearchActive);
-});
 
 const togglePopup = (forceState?: boolean) => {
   if (forceState !== undefined) {
@@ -29,24 +22,33 @@ const togglePopup = (forceState?: boolean) => {
   } else {
     isPopupVisible.value = !isPopupVisible.value;
   }
+
+  // If we're closing the popup in search mode, clear the results.
+  if (!isPopupVisible.value && props.isSearchMode) {
+    exerciseStore.clearSearchResults();
+  }
 };
 
-// Close popup when exercise is selected
+// Close popup and clear search when an exercise is selected
 const onExerciseSelected = () => {
   isPopupVisible.value = false;
+  if (props.isSearchMode) {
+    exerciseStore.clearSearchResults();
+  }
 };
 </script>
 
 <template>
-  <div v-if="isMuscleSelected || isShowingSearchResults">
+  <div v-show="props.isVisible">
     <ExerciseSelectorMain
       @toggle-popup="togglePopup"
       @exercise-selected="onExerciseSelected"
-      :is-search-mode="isShowingSearchResults"
+      :is-search-mode="props.isSearchMode"
     />
     <ExerciseSelectorPopup
       :is-visible="isPopupVisible"
       @exercise-selected="onExerciseSelected"
+      @close-popup="togglePopup(false)"
     />
   </div>
 </template>

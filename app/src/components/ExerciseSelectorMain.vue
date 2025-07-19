@@ -1,204 +1,107 @@
 <script setup lang="ts">
 import { useAllExercisesStore } from "@/stores/exercise.store";
 import type { Exercise } from "@/core/exercise/Exercise.entity";
-import { computed, ref, onMounted, watch, nextTick } from "vue";
+import { computed, ref, onMounted, watch, nextTick, onUnmounted, reactive } from "vue";
 import { useMuscleStore } from "@/stores/muscle.store";
 import ExerciseSelectorPopup from "@/components/ExerciseSelectorPopup.vue";
+import ExerciseDossier from "@/components/ExerciseDossier.vue";
 import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
-import type { MuscleInExercise } from '@/core/muscle/MuscleInExercise.entity';
 import { getMuscleColorByVolume } from "@/common/CSSHelper.ts";
-import ExerciseDossier from "@/components/ExerciseDossier.vue";
 
+// Stores
 const exerciseStore = useAllExercisesStore();
 const muscleStore = useMuscleStore();
 const bllStore = useWorkoutPlanStore();
+
+// Props
+defineProps<{ isSearchMode?: boolean }>();
+
+// Emits
+const emit = defineEmits(['toggle-popup', 'exercise-selected']);
+
+// Computed properties from stores
 const exercises = computed(() => exerciseStore.exercises);
 const targetMuscle = computed(() => muscleStore.muscle);
 
-// Helper to apply color tint to a muscle group using pure color calculator
-const applyTintToMuscle = (elementId: string, setsPerWeek: number) => {
-  const group = document.getElementById(elementId);
-  if (!group || !(group instanceof SVGElement)) return;
-  const maxSets = bllStore.setsPerWeekMax || 1;
-  const hexColor = getMuscleColorByVolume(setsPerWeek, maxSets);
-  const paths = group.getElementsByTagName('path');
-  for (let i = 0; i < paths.length; i++) {
-    (paths[i] as SVGPathElement).style.fill = hexColor;
-  }
-};
-
-// Loading states
-const isLoading = ref(true);
-const loadedImages = ref(new Set());
-const shouldRender = ref(false);
-
-// Add state for hover effects
-const hoveredExercise = ref<Exercise | null>(null);
-const selectedExerciseForHighlight = ref<Exercise | null>(null);
-
-// Add prop for search mode
-const props = defineProps<{
-  isSearchMode?: boolean
-}>();
-
-// Initialize component
-onMounted(async () => {
-  if (exercises.value.length > 0) {
-    isLoading.value = false;
-    shouldRender.value = true;
-  }
-  addSlowFadeToMuscles();
+// Consolidated reactive state
+const uiState = reactive({
+  isLoading: true,
+  isComponentVisible: false,
+  isDossierVisible: false
 });
 
-// Add slow fade transition to all muscle elements
-const addSlowFadeToMuscles = () => {
-  const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
-  muscleGroups.forEach(group => {
-    const paths = group.getElementsByTagName('path');
-    for (let i = 0; i < paths.length; i++) {
-      const path = paths[i] as SVGPathElement;
-      path.style.transition = 'fill 100ms ease';
-    }
-  });
-};
-
-// Watch for exercise changes to update loading state
-watch(exercises, (newExercises) => {
-  if (newExercises.length > 0) {
-    isLoading.value = false;
-    shouldRender.value = true;
-  }
-}, { immediate: true });
-
-// Watch for muscle changes to reset loading state
-watch(targetMuscle, async (newMuscle, oldMuscle) => {
-  if (!newMuscle) return;
-  if (oldMuscle) {
-    shouldRender.value = false;
-    isLoading.value = true;
-    loadedImages.value = new Set();
-    await nextTick();
-    setTimeout(() => {
-      isLoading.value = false;
-      shouldRender.value = true;
-    }, 200);
-  } else {
-    isLoading.value = false;
-    shouldRender.value = true;
-  }
+const exerciseState = reactive({
+  hovered: null as Exercise | null,
+  selected: null as Exercise | null
 });
 
-// Handle image load
-const handleImageLoaded = (exerciseId: string) => {
-  loadedImages.value.add(exerciseId);
-};
+type DossierState = 'closed' | 'muscle';
+const dossierState = reactive({
+  current: 'closed' as DossierState
+});
 
-const isImageLoaded = (exerciseId: string) => {
-  return loadedImages.value.has(exerciseId);
-};
+// DOM refs
+const exerciseSelectorMainRef = ref<HTMLElement | null>(null);
 
-// Helper functions for determining exercise properties
-const isCalisthenics = (exercise: Exercise) => exercise.equipmentRequired?.toLowerCase().includes("bodyweight") ?? false;
-const isSpecial = (exercise: Exercise) => exercise.movementType?.toLowerCase().includes("special") ?? false;
+// Muscle element cache for performance
+const muscleElementCache = new Map<string, Element>();
 
-// State for midway step
-const selectedExercise = ref<Exercise | null>(null);
-const showExerciseDossier = ref(false); // True when any dossier is open
-const isMuscleDossierOpen = ref(false); // True when muscle dossier is open (partial view)
-const isExerciseDossierOpen = ref(false); // True when exercise dossier is open (fullscreen)
-const popupHeight = ref('0%');
+const popupHeight = computed(() => {
+  return dossierState.current === 'muscle' ? '18%' : '0%';
+});
 
+const isDossierOpen = computed(() => dossierState.current !== 'closed');
 
-// Function to show exercise detail (fullscreen)
-const showExerciseDetails = (exercise: Exercise) => {
-  selectedExercise.value = exercise;
-  selectedExerciseForHighlight.value = exercise;
-  showExerciseDossier.value = true;
-  isExerciseDossierOpen.value = true;
-  isMuscleDossierOpen.value = false;
-  popupHeight.value = '100%';
-  highlightMusclesOnHover(exercise);
-  emit('exercise-selected', exercise);
-};
+// --- Methods ---
 
-// Function to toggle muscle data panel (partial view)
-const toggleMuscleData = () => {
-  if (isMuscleDossierOpen.value) {
-    closeDossier();
-  } else if (exercises.value.length > 0) {
-    const firstExercise = exercises.value[0];
-    selectedExercise.value = firstExercise;
-    selectedExerciseForHighlight.value = firstExercise;
-    showExerciseDossier.value = true;
-    isMuscleDossierOpen.value = true;
-    isExerciseDossierOpen.value = false;
-    popupHeight.value = '18%';
-    highlightMusclesOnHover(firstExercise);
-    emit('exercise-selected', firstExercise);
-  }
-};
-
-// Handler for adding exercise to plan
-const handleAddToPlan = (data: { exercise: Exercise, sets: number }) => {
-  bllStore.addMuscleLoadToPlan(data.exercise, data.sets);
-  closeDossier();
-  emit('exercise-selected', data.exercise);
-};
-
-// Handler for closing any dossier
 const closeDossier = () => {
-  showExerciseDossier.value = false;
-  isMuscleDossierOpen.value = false;
-  isExerciseDossierOpen.value = false;
-  popupHeight.value = '0%';
-  selectedExercise.value = null;
-  selectedExerciseForHighlight.value = null;
+  dossierState.current = 'closed';
   resetMuscleHighlighting();
 };
 
-// Function to highlight muscles on hover
-const highlightMusclesOnHover = (exercise: Exercise) => {
-  hoveredExercise.value = exercise;
-  if (exercise?.muscleInExercises) {
-    exercise.muscleInExercises.forEach(muscleInExercise => {
-      const muscleName = MuscleHelper.getMuscleNameById(muscleInExercise.muscleId);
-      if (muscleName) {
-        const elementId = getMuscleElementId(muscleName);
-        let intensity = 0;
-        if (muscleInExercise.muscleMovementCategory === "primary") intensity = 15;
-        else if (muscleInExercise.muscleMovementCategory === "synergistic") intensity = 10;
-        else intensity = 5;
-        applyTintToMuscle(elementId, intensity);
-      }
-    });
+const closeExerciseDossier = () => {
+  // Only proceed if the dossier is actually visible
+  if (uiState.isDossierVisible) {
+    // First reset highlighting
+    resetMuscleHighlighting();
+    
+    // Hide the dossier
+    uiState.isDossierVisible = false;
+    
+    // Ensure the main component remains visible
+    uiState.isComponentVisible = true;
+    
+    // Reset the selected exercise
+    exerciseState.selected = null;
+    
+    // Reset muscle highlighting
+    resetMuscleHighlighting();
   }
 };
 
-// Function to reset muscle highlighting
-const resetMuscleHighlighting = () => {
-  if (hoveredExercise.value) {
-    hoveredExercise.value = null;
-    if (selectedExerciseForHighlight.value) {
-      highlightMusclesOnHover(selectedExerciseForHighlight.value);
-      return;
-    }
-    if (targetMuscle.value) {
-      bllStore.presetMuscleArray.forEach(muscle => {
-        const elementId = getMuscleElementId(muscle.nameOfMuscle);
-        const totalVolume = muscle.getTotalSetVolume();
-        applyTintToMuscle(elementId, totalVolume);
-      });
-    } else {
-      const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
-      muscleGroups.forEach(group => {
-        applyTintToMuscle(group.id, 0);
-      });
-    }
+const toggleMuscleData = () => {
+  if (dossierState.current === 'muscle') {
+    closeDossier();
+  } else {
+    dossierState.current = 'muscle';
   }
 };
 
-// Helper function to map muscle names to SVG IDs
+const showExerciseDetails = (exercise: Exercise) => {
+  exerciseState.selected = exercise;
+  uiState.isDossierVisible = true;
+  highlightMusclesOnHover(exercise);
+};
+
+const handleAddToPlan = (data: { exercise: Exercise, sets: number }) => {
+  bllStore.addMuscleLoadToPlan(data.exercise, data.sets);
+  closeExerciseDossier();
+  emit('exercise-selected', data.exercise);
+};
+
+// --- Muscle Highlighting Logic ---
+
 const getMuscleElementId = (muscleName: string): string => {
   const muscleIdMap: Record<string, string> = {
     'Front Delts': 'frontdelts', 'Anterior Delts': 'frontdelts',
@@ -211,101 +114,296 @@ const getMuscleElementId = (muscleName: string): string => {
   return muscleIdMap[muscleName] || muscleName.toLowerCase().replace(/\s+/g, '');
 };
 
-const emit = defineEmits(['toggle-popup', 'exercise-selected']);
+// Optimized muscle tinting with caching
+const applyTintToMuscle = (elementId: string, setsPerWeek: number) => {
+  let group = muscleElementCache.get(elementId);
+  if (!group) {
+    const element = document.getElementById(elementId);
+    if (element && element instanceof SVGElement) {
+      group = element;
+      muscleElementCache.set(elementId, group);
+    } else {
+      return;
+    }
+  }
+  
+  const maxSets = bllStore.setsPerWeekMax || 1;
+  const hexColor = getMuscleColorByVolume(setsPerWeek, maxSets);
+  const paths = (group as SVGElement).getElementsByTagName('path');
+  for (let i = 0; i < paths.length; i++) {
+    (paths[i] as SVGPathElement).style.fill = hexColor;
+  }
+};
+
+const highlightMusclesOnHover = (exercise: Exercise | null) => {
+  exerciseState.hovered = exercise;
+  if (!exercise) return;
+
+  exercise.muscleInExercises.forEach(muscleInExercise => {
+    const muscleName = MuscleHelper.getMuscleNameById(muscleInExercise.muscleId);
+    if (muscleName) {
+      const elementId = getMuscleElementId(muscleName);
+      let intensity = 0;
+      if (muscleInExercise.muscleMovementCategory === "primary") intensity = 15;
+      else if (muscleInExercise.muscleMovementCategory === "synergistic") intensity = 10;
+      else intensity = 5;
+      applyTintToMuscle(elementId, intensity);
+    }
+  });
+};
+
+const resetMuscleHighlighting = () => {
+  if (!exerciseState.hovered) return;
+  exerciseState.hovered = null;
+
+  if (exerciseState.selected) {
+    highlightMusclesOnHover(exerciseState.selected);
+    return;
+  }
+
+  if (targetMuscle.value) {
+    bllStore.presetMuscleArray.forEach(muscle => {
+      const elementId = getMuscleElementId(muscle.nameOfMuscle);
+      const totalVolume = muscle.getTotalSetVolume();
+      applyTintToMuscle(elementId, totalVolume);
+    });
+  } else {
+    const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
+    muscleGroups.forEach(group => {
+      applyTintToMuscle(group.id, 0);
+    });
+  }
+};
+
+// --- Lifecycle and Watchers ---
+
+onMounted(() => {
+  const muscleGroups = document.querySelectorAll('[id^="abs"], [id^="front"], [id^="side"], [id^="rear"], [id^="biceps"], [id^="triceps"], [id^="traps"], [id^="lats"], [id^="chest"], [id^="quads"], [id^="glutes"], [id^="hamstrings"], [id^="calves"], [id^="forearm"]');
+  muscleGroups.forEach(group => {
+    const paths = group.getElementsByTagName('path');
+    for (let i = 0; i < paths.length; i++) {
+      const path = paths[i] as SVGPathElement;
+      path.style.transition = 'fill 100ms ease';
+    }
+  });
+  document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
+
+// Track if we're currently processing an add button click
+let isProcessingAdd = false;
+
+const handleClickOutside = (event: MouseEvent) => {
+  // Early return if component is already not visible
+  if (!uiState.isComponentVisible || isProcessingAdd) return;
+  
+  const target = event.target as HTMLElement;
+  
+  // Check if this is an add button click
+  if (target.closest('.select-button')) {
+    isProcessingAdd = true;
+    setTimeout(() => {
+      isProcessingAdd = false;
+    }, 100);
+    return;
+  }
+  
+  // Don't close if clicking within the main component or its children
+  if (exerciseSelectorMainRef.value?.contains(target)) {
+    return;
+  }
+  
+  // Get all dossier elements including any potential portals
+  const dossierElements = Array.from(document.querySelectorAll('.exercise-dossier, [data-dossier]'));
+  const isClickInDossier = dossierElements.some(el => el.contains(target));
+  
+  // Don't close if clicking on any dossier element or its children
+  if (isClickInDossier || uiState.isDossierVisible) {
+    return;
+  }
+  
+  // Only close if we're not in the middle of a transition
+  uiState.isComponentVisible = false;
+};
+
+watch(exercises, (newExercises) => {
+  uiState.isLoading = newExercises.length === 0;
+}, { immediate: true });
+
+watch(targetMuscle, (newMuscle) => {
+  if (newMuscle) {
+    nextTick(() => {
+      uiState.isComponentVisible = true;
+    });
+  } else {
+    uiState.isComponentVisible = false;
+  }
+});
+
+// --- Image Loading Helpers (Optimized with Map) ---
+const imageLoadingState = reactive({
+  loadedImages: new Map<string, boolean>()
+});
+
+const handleImageLoaded = (exerciseId: string) => {
+  imageLoadingState.loadedImages.set(exerciseId, true);
+};
+
+const isImageLoaded = (exerciseId: string) => {
+  return imageLoadingState.loadedImages.get(exerciseId) ?? false;
+};
+
+// --- Exercise Type Helpers ---
+const isCalisthenics = (exercise: Exercise) => exercise.equipmentRequired?.toLowerCase().includes("bodyweight") ?? false;
+const isSpecial = (exercise: Exercise) => exercise.movementType?.toLowerCase().includes("special") ?? false;
+
+// --- Filtering Logic ---
+
+const searchQuery = ref('');
+
+const filters = ref({
+  calisthenics: true,
+  unilateral: true,
+  highSpinalLoad: true,
+  special: true,
+});
+
+const toggleFilter = (filterName: keyof typeof filters.value) => {
+  filters.value[filterName] = !filters.value[filterName];
+};
+
+const filteredExercises = computed(() => {
+  const query = searchQuery.value.toLowerCase().trim();
+  return exercises.value.filter(exercise => {
+    // Icon filters
+    if (!filters.value.calisthenics && isCalisthenics(exercise)) return false;
+    if (!filters.value.unilateral && exercise.isUnilateral) return false;
+    if (!filters.value.highSpinalLoad && exercise.isHighSpinalLoad) return false;
+    if (!filters.value.special && isSpecial(exercise)) return false;
+
+    // Search query filter
+    if (query && !exercise.name.toLowerCase().includes(query)) {
+      return false;
+    }
+
+    return true;
+  });
+});
+
 </script>
 
 <template>
-  <div class="new-container" :class="{ 'visible': targetMuscle }">
+  <div ref="exerciseSelectorMainRef" v-show="targetMuscle" class="new-container" :class="{ 'visible': uiState.isComponentVisible, 'dossier-open': uiState.isDossierVisible }">
+    <!-- New backdrop element -->
+    <div class="backdrop" :class="{ 'active': uiState.isDossierVisible }"></div>
     <div class="new-inner-container">
       <!-- Popup Container -->
       <div
         class="popup-container"
         :style="{ height: popupHeight, margin: popupHeight !== '0%' ? '0 12px 0 12px' : '0' }"
       >
-        <div class="popup-content-wrapper" :class="{ 'visible': showExerciseDossier }">
+        <div class="popup-content-wrapper" :class="{ 'visible': isDossierOpen }">
           <ExerciseSelectorPopup
-            :is-visible="showExerciseDossier"
-            :exercise="selectedExercise"
-            :is-muscle-dossier-open="isMuscleDossierOpen"
-            :is-exercise-dossier-open="isExerciseDossierOpen"
+            :is-visible="isDossierOpen"
             @close="closeDossier"
-            @add-to-plan="handleAddToPlan"
           />
         </div>
       </div>
 
       <!-- Header Section -->
-      <div class="new-header" :class="{ 'popup-is-open': popupHeight !== '0%' }" v-show="!isExerciseDossierOpen && targetMuscle">
+      <div class="new-header" :class="{ 'popup-is-open': isDossierOpen }">
         <div class="new-header-content">
-          <button class="new-toggle-button" @click="toggleMuscleData" :class="{ 'active': isMuscleDossierOpen }" title="Show muscle data">
+          <button class="new-toggle-button" @click="toggleMuscleData" :class="{ 'active': dossierState.current === 'muscle' }" title="Show muscle data">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bar-chart-3"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
           </button>
           <div class="new-header-flex">
             <div class="new-text-section">
               <p class="new-description-text">{{ targetMuscle?.description }}</p>
             </div>
-            <div class="new-title-section">
-              <h1 class="new-main-title">{{ targetMuscle?.name?.toUpperCase() }}</h1>
-              <p class="new-subtitle">{{ targetMuscle?.nameLatin }}</p>
-            </div>
+
           </div>
         </div>
       </div>
 
+      <!-- Title section -->
+      <div class="new-title-section">
+        <h1 class="new-main-title">{{ targetMuscle?.name?.toUpperCase() }}</h1>
+        <p class="new-subtitle">{{ targetMuscle?.nameLatin }}</p>
+      </div>
+
+            <!-- Search and Filter Section -->
+      <div class="search-filter-container">
+        <!-- Filter Section -->
+        <div class="filter-container">
+          <button @click="toggleFilter('calisthenics')" :class="{ active: filters.calisthenics }" class="filter-button" title="Toggle Calisthenics">
+            <img src="/bodyweight-warning.png" alt="Calisthenics">
+          </button>
+          <button @click="toggleFilter('unilateral')" :class="{ active: filters.unilateral }" class="filter-button" title="Toggle Unilateral">
+            <img src="/blue-warning.png" alt="Unilateral">
+          </button>
+          <button @click="toggleFilter('highSpinalLoad')" :class="{ active: filters.highSpinalLoad }" class="filter-button" title="Toggle High Spine Stress">
+            <img src="/red-warning.png" alt="High Spine Stress">
+          </button>
+          <button @click="toggleFilter('special')" :class="{ active: filters.special }" class="filter-button" title="Toggle Special">
+            <img src="/dynamic-warning.png" alt="Special">
+          </button>
+        </div>
+
+        <!-- Search Bar Section -->
+        <div class="search-container">
+          <input type="text" v-model="searchQuery" placeholder="Search..." class="search-input">
+        </div>
+      </div>
+
       <!-- Main Content Container (Exercise List) -->
-      <div class="main-content-container" v-show="!isExerciseDossierOpen">
+      <div class="main-content-container">
         <div class="new-scroll-container">
           <div class="new-scrollable-area fancy-scrollbar">
-            <!-- Skeleton Loader -->
-            <div v-if="isLoading" class="skeleton-container">
+            <div v-if="uiState.isLoading" class="skeleton-container">
               <div v-for="i in 6" :key="i" class="new-exercise-card skeleton"></div>
             </div>
-
-            <!-- Exercise Content -->
             <div v-else>
               <div
-                v-for="exercise in exercises"
+                v-for="exercise in filteredExercises"
                 :key="exercise.id"
                 class="new-exercise-card"
                 @click="showExerciseDetails(exercise)"
                 @mouseenter="highlightMusclesOnHover(exercise)"
                 @mouseleave="resetMuscleHighlighting()"
               >
-                <div class="new-card-content">
-                  <div class="new-card-flex">
-                    <div class="new-card-left">
-                      <div class="new-title-row">
-                        <img v-if="exercise.isUnilateral" class="image-4" src="/blue-warning.png" title="This exercise is unilateral, meaning it only works one side of the body at a time.">
-                        <img v-if="exercise.isHighSpinalLoad" class="image-4" src="/red-warning.png" title="This exercise puts a lot of weight/stress on the spine.">
-                        <img v-if="isCalisthenics(exercise)" class="image-4" src="/bodyweight-warning.png" title="This exercise is calisthenics, meaning it is done without any equipment.">
-                        <img v-if="isSpecial(exercise)" class="image-4" src="/dynamic-warning.png" title="This exercise combines multiple exercises.">
-
-                        <h3 class="new-exercise-title">{{ exercise.name }}</h3>
-                      </div>
-                      <div class="new-tags-container">
-                        <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'primary')" :key="m.muscleId" class="new-tag primary-muscle">
-                          {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
-                        </span>
-                        <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'synergistic')" :key="m.muscleId" class="new-tag synergistic-muscle">
-                          {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
-                        </span>
-                        <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'stabilizing')" :key="m.muscleId" class="new-tag stabilizing-muscle">
-                          {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="new-image-container">
-                      <div v-if="!isImageLoaded(exercise.id)" class="skeleton-img-placeholder pulse"></div>
-                      <img
-                        :src="exercise.imageUrl"
-                        :alt="exercise.name"
-                        class="new-image"
-                        loading="lazy"
-                        @load="handleImageLoaded(exercise.id)"
-                        :class="{ 'image-loaded': isImageLoaded(exercise.id) }"
-                      />
-                    </div>
+                <div class="new-card-left">
+                  <div class="new-title-row">
+                    <img v-if="exercise.isUnilateral" class="image-4" src="/blue-warning.png" title="This exercise is unilateral, meaning it only works one side of the body at a time.">
+                    <img v-if="exercise.isHighSpinalLoad" class="image-4" src="/red-warning.png" title="This exercise puts a lot of weight/stress on the spine.">
+                    <img v-if="isCalisthenics(exercise)" class="image-4" src="/bodyweight-warning.png" title="This exercise is calisthenics, meaning it is done without any equipment.">
+                    <img v-if="isSpecial(exercise)" class="image-4" src="/dynamic-warning.png" title="This exercise combines multiple exercises.">
+                    <h3 class="new-exercise-title">{{ exercise.name }}</h3>
                   </div>
+                  <div class="new-tags-container">
+                    <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'primary')" :key="m.muscleId" class="new-tag primary-muscle">
+                      {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
+                    </span>
+                    <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'synergistic')" :key="m.muscleId" class="new-tag synergistic-muscle">
+                      {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
+                    </span>
+                    <span v-for="m in exercise.muscleInExercises.filter(m => m.muscleMovementCategory === 'stabilizing')" :key="m.muscleId" class="new-tag stabilizing-muscle">
+                      {{ MuscleHelper.getMuscleNameById(m.muscleId) }}
+                    </span>
+                  </div>
+                </div>
+                <div class="new-image-container">
+                  <div v-if="!isImageLoaded(exercise.id)" class="skeleton-img-placeholder pulse"></div>
+                  <img
+                    :src="exercise.imageUrl"
+                    :alt="exercise.name"
+                    class="new-image"
+                    loading="lazy"
+                    @load="handleImageLoaded(exercise.id)"
+                    :class="{ 'image-loaded': isImageLoaded(exercise.id) }"
+                  />
                 </div>
               </div>
             </div>
@@ -313,26 +411,55 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
         </div>
       </div>
     </div>
+    <ExerciseDossier
+      v-if="uiState.isDossierVisible"
+      :exercise="exerciseState.selected"
+      :visible="uiState.isDossierVisible"
+      @add-to-plan="handleAddToPlan"
+      @close="closeExerciseDossier"
+    />
   </div>
 </template>
 
 <style scoped>
-/* Base container styles from carcass */
+/* --- Base Container --- */
 .new-container {
   position: fixed;
   top: 0;
   left: 0;
-  width: 562px; /* Sidebar width */
+  width: 30vw;
+  min-width: 300px;
   height: 100vh;
   display: flex;
   flex-direction: column;
-  transition: transform 0.5s ease-in-out;
-  transform: translateX(-100%); /* Start off-screen by default */
+  transform: translateX(-100%);
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 .new-container.visible {
-  transform: translateX(0); /* Slide in when .visible is added */
+  transform: translateX(0);
 }
 
+.new-container.dossier-open .new-inner-container {
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.new-inner-container {
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.144);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(6px);
+}
+
+/* --- Popup --- */
 .popup-container {
   position: relative;
   overflow: hidden;
@@ -341,58 +468,23 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
 }
 
 .popup-content-wrapper {
-  transform: translateY(-100%);
+  transform: translateY(-100%) ;
   transition: transform 0.4s ease-in-out;
   height: 100%;
   width: 100%;
 }
+
 .popup-content-wrapper.visible {
   transform: translateY(0);
 }
 
-.main-content-container {
-  flex-grow: 1; /* Let this take remaining space */
-  overflow: hidden;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.new-scroll-container {
-  height: 100%;
-  overflow-y: auto;
-  position: relative;
-  z-index: 1000; /* Ensure it's on top */
-  padding-right: 15px;
-  overflow: hidden;
-  font-family: 'Geist Sans', sans-serif; /* Corrected font name */
-  transition: transform 0.3s ease-in-out;
-  backdrop-filter: blur(0px); /* 40px */
-  background-clip: padding-box;
-}
-
-.new-inner-container {
-  width: 100%;
-  height: 100%;
-  /* New gradient inspired by child elements */
-  background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.78), rgba(59, 130, 246, 0.15));
-  backdrop-filter: blur(12px);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-/* Header styles */
+/* --- Header --- */
 .new-header {
-  margin: 0 12px 8px 12px;
-  backdrop-filter: blur(40px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
   flex-shrink: 0;
-  transition: margin-top 0.4s ease-in-out;
+  transition: all 0.4s ease-in-out;
 }
-
 .new-header.popup-is-open {
-    margin-top: 8px;
+  margin-top: 8px;
 }
 
 .new-header-content {
@@ -405,7 +497,6 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   width: 48px;
   height: 48px;
   background: linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(229,231,235,0.5) 100%);
-  backdrop-filter: blur(4px);
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -414,14 +505,12 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   border: 1px solid rgba(255, 255, 255, 0.4);
   cursor: pointer;
   transition: all 0.2s;
-  font-size: 14px;
-  font-weight: 500;
   color: #374151;
   flex-shrink: 0;
 }
 .new-toggle-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 15px 20px -5px rgba(0, 0, 0, 0.25);
 }
 .new-toggle-button.active {
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.8) 0%, rgba(37, 99, 235, 0.7) 100%);
@@ -429,18 +518,108 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   box-shadow: 0 5px 10px -3px rgba(0, 0, 0, 0.3);
 }
 
-
 .new-header-flex {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
+  gap: 16px;
   height: 100%;
   flex-grow: 1;
 }
 
+/* --- Search Section --- */
+.search-filter-container {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  gap: 10px;
+}
+
+.filter-container {
+  flex: 0 1 55%;
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search-container {
+  flex: 0 1 45%;
+}
+
+.filter-button {
+  border-radius: 8px;
+  padding: 8px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-button img {
+  width: 28px;
+  height: 28px;
+  transition: all 0.2s ease-in-out;
+}
+
+.filter-button:not(.active) {
+  transform: scale(0.85);
+}
+
+.filter-button:not(.active) img {
+  filter: grayscale(100%) blur(3px);
+}
+
+.filter-button.active {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.filter-button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(0, 0, 0, 0);
+  border-radius: 12px;
+  box-shadow: 0 0px 6px 6px rgba(0, 0, 0, 0.13);
+  backdrop-filter: blur(24px);
+  font-size: 16px;
+  color: #1f2937;
+  transition: all 0.2s ease-in-out;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.1em;
+}
+
+.search-input::placeholder {
+  color: #6b7280;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+@media (max-width: 1239px) {
+  .search-filter-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-container {
+    justify-content: center;
+    gap: 30px;
+  }
+}
+
 .new-text-section {
   flex: 1;
-  /* Removed max-height and overflow-y to allow the container to grow */
+  min-width: 60%;
 }
 
 .new-description-text {
@@ -451,37 +630,55 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
 }
 
 .new-title-section {
+  font-family: 'Inter', sans-serif;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  text-align: center;
   justify-content: center;
-  margin-left: 16px;
-  height: 100%;
-  text-align: right;
+  margin-right: 12px;
+  margin-left: 12px;
+  padding-top: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 4px;
+  border-radius: 0px;
+  min-width: 0;
+  backdrop-filter: blur(48px) contrast(1.25);
+  border: 1px solid rgba(0, 0, 0, 0.1)
 }
 
 .new-main-title {
-  font-size: 23px;
-  font-weight: bold;
+  font-size: 29px;
+  font-weight: 900;
   color: #1c1c1c;
   margin-bottom: -4px;
   letter-spacing: -0.025em;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .new-subtitle {
   color: #1c1c1c;
   font-style: italic;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 16x;
+  font-weight: 400;
 }
 
-/* Scroll container styles */
+/* --- Main Content & Scroll --- */
+.main-content-container {
+  flex-grow: 1;
+  overflow: hidden;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .new-scroll-container {
   flex: 1;
   overflow: hidden;
-  margin-left: 12px;
-  margin-right: 12px;
-  margin-bottom: 12px;
+  margin: 0 12px 12px 12px;
+  position: relative; /* Create stacking context */
+  z-index: 2; /* Ensure it's on top of other elements */
 }
 
 .new-scrollable-area {
@@ -490,39 +687,30 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   padding-right: 8px;
 }
 
-/* Exercise card styles */
+/* --- Exercise Card --- */
 .new-exercise-card {
   position: relative;
-  backdrop-filter: blur(40px);
-  box-shadow: 0 0px 5px 5px rgba(0, 0, 0, 0.2);
-  transition: all 0.15s;
-  flex-shrink: 0;
-  border-top-right-radius: 8px;
-  border-bottom-right-radius: 8px;
-  margin-bottom: 12px;
+  padding: 12px;
   min-height: 11vh;
+  box-shadow: 0 0 9px 1px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s;
+  border-radius: 8px;
+  margin-left: 8px;
+  margin-bottom: 12px;
   cursor: pointer;
-  display: flex; /* Make the card a flex container */
-}
-.new-exercise-card:hover {
-    box-shadow: 0 0px 5px 3px rgba(0, 0, 0, 0);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.904) 0%, rgba(165, 230, 122, 0.46) 100%),
-              linear-gradient(135deg, rgba(230,230,230,0.2) 0%, rgba(200,200,200,0.2) 100%);
-}
-
-.new-card-content {
-  padding: 8px;
-  display: flex; /* Make this a flex container */
-  flex-direction: column; /* Stack children vertically */
-  width: 100%; /* Ensure it takes full width */
-}
-
-.new-card-flex {
   display: flex;
-  align-items: stretch; /* Changed from center to stretch */
-  justify-content: space-between;
-  width: 100%;
-  flex-grow: 1; /* Allow this to grow and fill space */
+  backdrop-filter: contrast(1.25);
+}
+
+.new-exercise-card:hover {
+  box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.904) 0%, rgba(165, 230, 122, 0.7) 100%);
+}
+
+.new-exercise-card:active {
+  box-shadow: 0 0 5px 3px rgba(0, 0, 0, 0);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.904) 0%, rgba(255, 255, 255, 0.8) 100%),
+  linear-gradient(135deg, rgba(230,230,230,0.2) 0%, rgba(200,200,200,0.2) 100%);
 }
 
 .new-card-left {
@@ -534,8 +722,6 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   display: flex;
   align-items: center;
   gap: 8px;
-  padding-top: 0px;
-  padding-bottom: 0px;
   margin-bottom: 12px;
   margin-top: 5px;
   line-height: 0.9;
@@ -543,8 +729,8 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
 }
 
 .new-exercise-title {
-  font-family: 'Inter', sans-serif; /* Use Inter font */
-  font-weight: bold; /* Make exercise names bold */
+  font-family: 'Inter', sans-serif;
+  font-weight: bold;
   text-transform: uppercase;
   color: #1f2937;
   letter-spacing: -0.025em;
@@ -553,37 +739,11 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   font-size: 24px;
 }
 
-.new-icon-container {
-  background: rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(4px);
-  border-radius: 50%;
-  padding: 4px;
-  margin-right: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .image-4 {
   width: 20px;
   height: 20px;
-  margin-right: 0px;
   object-fit: contain;
 }
-
-/* Special styles for letter icons */
-.u-icon, .t-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: 4px;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-.u-icon { background-color: rgba(59, 130, 246, 0.8); }
-.t-icon { background-color: rgba(168, 85, 247, 0.8); }
-
 
 .new-tags-container {
   display: flex;
@@ -592,30 +752,25 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
 }
 
 .new-tag {
-  backdrop-filter: blur(4px);
+  font-family: 'Inter', sans-serif;
   color: white;
   font-size: 12px;
   padding: 4px 8px;
   font-weight: 500;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0px 6px 2px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   transition: transform 0.2s;
   border-radius: 4px;
 }
-.new-tag:hover {
-    transform: translateY(-1px);
-}
 
-/* Muscle tag colors based on original logic */
-.primary-muscle { background-color: rgb(0, 214, 107); }
-.synergistic-muscle { background-color: rgb(130, 175, 187); }
-.stabilizing-muscle { background-color: rgb(180, 180, 180); }
-
+.primary-muscle { background-image: linear-gradient(135deg, rgb(0, 214, 107), rgb(0, 193, 96)); }
+.synergistic-muscle { background-image: linear-gradient(135deg, rgb(130, 175, 187), rgb(117, 158, 168)); }
+.stabilizing-muscle { background-image: linear-gradient(135deg, rgb(180, 180, 180), rgb(162, 162, 162)); }
 
 .new-image-container {
   width: 33%;
   aspect-ratio: 6 / 4;
-  align-self: stretch; /* Allow container to fill flex height */
+  align-self: stretch;
   flex-shrink: 0;
   margin-left: 12px;
   border-radius: 8px;
@@ -632,17 +787,15 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   object-fit: cover;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.25);
   border: 1px solid rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(4px);
   filter: drop-shadow(0 0 8px rgba(0,0,0,0.15));
   opacity: 0;
   transition: opacity 0.5s ease-in-out;
 }
-
 .image-loaded {
   opacity: 1;
 }
 
-/* Skeleton loader styles */
+/* --- Skeleton Loader --- */
 .skeleton {
   opacity: 0.5;
   animation: pulse 1.5s infinite ease-in-out;
@@ -654,101 +807,52 @@ const emit = defineEmits(['toggle-popup', 'exercise-selected']);
   100% { background-color: rgba(200,200,200,0.3); }
 }
 .skeleton-img-placeholder {
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-    background-color: rgba(200,200,200,0.5);
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background-color: rgba(200,200,200,0.5);
 }
 .pulse {
   animation: pulse 1.5s infinite ease-in-out;
 }
 
-/* Fancy scrollbar with trail effect */
+/* --- Scrollbar --- */
 .fancy-scrollbar {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.4) transparent;
 }
-
-.fancy-scrollbar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.fancy-scrollbar::-webkit-scrollbar-track {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.1) 0%,
-    rgba(200, 200, 200, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 100%
-  );
-  border-radius: 10px;
-  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.1);
-}
-
+.fancy-scrollbar::-webkit-scrollbar { width: 8px; }
+.fancy-scrollbar::-webkit-scrollbar-track { background: transparent; }
 .fancy-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.6) 0%,
-    rgba(220, 220, 220, 0.8) 30%,
-    rgba(200, 200, 200, 0.9) 70%,
-    rgba(180, 180, 180, 0.7) 100%
-  );
+  background: rgba(255, 255, 255, 0.5);
   border-radius: 10px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 12px rgba(255, 255, 255, 0.3);
-  position: relative;
 }
 
-.fancy-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(
-    to bottom,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(230, 230, 230, 0.9) 30%,
-    rgba(210, 210, 210, 1) 70%,
-    rgba(190, 190, 190, 0.8) 100%
-  );
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.6), 0 0 16px rgba(255, 255, 255, 0.5);
-}
-
-.fancy-scrollbar::-webkit-scrollbar-thumb:active {
-  background: linear-gradient(
-    to bottom,
-    rgba(240, 240, 240, 0.9) 0%,
-    rgba(220, 220, 220, 1) 50%,
-    rgba(200, 200, 200, 0.9) 100%
-  );
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 255, 255, 0.6);
-}
-
-/* Trail effect animation */
-.fancy-scrollbar::-webkit-scrollbar-thumb::before {
-  content: "";
+/* New backdrop styles */
+.backdrop {
   position: absolute;
-  top: -10px;
+  top: 0;
   left: 0;
   right: 0;
-  height: 10px;
-  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
-  border-radius: 10px 10px 0 0;
+  bottom: 0;
+  backdrop-filter: blur(0px);
+  background: rgba(255, 255, 255, 0);
+  z-index: 5;
+  pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  border-radius: 12px;
+  transition: all 0.2s ease-out;
 }
 
-.fancy-scrollbar::-webkit-scrollbar-thumb::after {
-  content: "";
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  right: 0;
-  height: 10px;
-  background: linear-gradient(to top, rgba(255, 255, 255, 0.3) 0%, transparent 100%);
-  border-radius: 0 0 10px 10px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.fancy-scrollbar:hover::-webkit-scrollbar-thumb::before,
-.fancy-scrollbar:hover::-webkit-scrollbar-thumb::after {
+.backdrop.active {
+  backdrop-filter: blur(4px) grayscale(80%);
+  background: rgba(255, 255, 255, 0.1);
   opacity: 1;
 }
 
+/* Remove the old ::before implementation */
+.new-container.dossier-open .new-inner-container::before {
+  content: none;
+}
 </style>

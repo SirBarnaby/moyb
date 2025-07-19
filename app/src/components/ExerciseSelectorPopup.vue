@@ -2,10 +2,12 @@
 import { computed } from "vue";
 import { useMuscleStore } from "@/stores/muscle.store";
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{
   isVisible: boolean;
 }>();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const emit = defineEmits(['exercise-selected']);
 
 const muscleStore = useMuscleStore();
@@ -182,13 +184,13 @@ const fiberTypeImage = computed(() => {
   font-size: 100%;
   display: flex;
   overflow: hidden; /* Prevent content from spilling out */
-  box-shadow: 0 2px 14px 4px #00000070;
+  box-shadow: 0 2px 14px 4px #00000000;
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   transform: translateY(-100%);
-  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+  transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
   background-color: transparent;
   backdrop-filter: blur(4px);
   z-index: 1; /* Ensure it's stacked correctly */
@@ -200,6 +202,7 @@ const fiberTypeImage = computed(() => {
   transform: translateY(0);
   opacity: 1;
   pointer-events: auto;
+  line-height: 1;
 }
 
 /* Statistics section styling */
@@ -237,6 +240,7 @@ const fiberTypeImage = computed(() => {
   padding-right: 10px;
   width: 100%;
   font-size: 90%;
+  line-height: 0.9;
 }
 
 .statisticmeter {

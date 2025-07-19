@@ -1,17 +1,27 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { useWorkoutPlanStore } from '../workoutPlan.store';
 import { describe, it, expect, beforeEach } from 'vitest';
+import { Exercise } from '@/core/exercise/Exercise.entity';
 
 // Mock Exercise entity
-const mockExercise = (id: string) => ({
+const mockExercise = (id: string): Exercise => ({
   id,
   name: `Exercise ${id}`,
   description: '',
   equipmentRequired: '',
   movementType: '',
   popularity: 0,
+  rangeOfMotion: 0,
+  injuryRiskFactor: '',
+  jointStressFactor: '',
+  cnsFatigueFactor: '',
+  isUnilateral: false,
+  isHighSpinalLoad: false,
+  createdAt: '',
+  updatedAt: '',
+  mainMuscle: '',
+  imageUrl: '',
   muscleInExercises: [],
-  isSpecial: () => false,
 });
 
 describe('useWorkoutPlanStore', () => {
@@ -24,9 +34,9 @@ describe('useWorkoutPlanStore', () => {
     const e1 = mockExercise('a');
     const e2 = mockExercise('b');
 
-    store.addExercise(e1 as any, 4);
-    store.addExercise(e2 as any, 3);
-    store.addExercise(e1 as any, 2); // accumulate
+    store.addExercise(e1, 4);
+    store.addExercise(e2, 3);
+    store.addExercise(e1, 2); // accumulate
 
     expect(store.exercises.length).toBe(2);
     const idx = store.exercises.findIndex((ex) => ex.id === 'a');
