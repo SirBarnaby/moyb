@@ -8,6 +8,7 @@ import ExerciseDossier from "@/components/ExerciseDossier.vue";
 import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 import { getMuscleColorByVolume } from "@/common/CSSHelper.ts";
+import { CONSTANTS } from '@/config/mobile-detector';
 
 // Stores
 const exerciseStore = useAllExercisesStore();
@@ -422,7 +423,7 @@ const filteredExercises = computed(() => {
 </template>
 
 <style scoped>
-/* --- Base Container --- */
+
 .new-container {
   position: fixed;
   top: 0;
@@ -855,4 +856,5 @@ const filteredExercises = computed(() => {
 .new-container.dossier-open .new-inner-container::before {
   content: none;
 }
+
 </style>

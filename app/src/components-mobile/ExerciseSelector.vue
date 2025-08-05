@@ -3,9 +3,9 @@
   Invariants: Relies exclusively on Pinia `useAllExercisesStore` for state. No direct DOM queries or global mutations. -->
 <script setup lang="ts">
 import { ref } from 'vue';
-import ExerciseSelectorPopup from "@/components/mobile/ExerciseSelectorPopup.vue";
-import ExerciseSelectorMain from "@/components/mobile/ExerciseSelectorMain.vue";
-import { useAllExercisesStore } from "@/stores/exercise.store";
+import ExerciseSelectorPopup from "@/components-mobile/ExerciseSelectorPopup.vue";
+import ExerciseSelectorMain from "@/components-mobile/ExerciseSelectorMain.vue";
+import { useAllExercisesStore } from "@/stores/exercise.store.ts";
 
 const exerciseStore = useAllExercisesStore();
 

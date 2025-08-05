@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { ANIMATION_CONFIG } from '@/config/animations';
+import { ANIMATION_CONFIG } from '@/config/animations.ts';
 
 const emit = defineEmits<{
   'intro-complete': [useMobile: boolean]

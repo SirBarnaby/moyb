@@ -57,7 +57,7 @@ const handleKeyPress = (event: KeyboardEvent) => {
     <!-- Default state - click to search -->
     <div v-if="!showSearch" @click="toggleSearch" class="search-prompt">
       <DeepHeaderText
-        msg="Search currently omitted..."
+        msg="Search currently omitted... [DESKTOP]"
         img_url="/dot.png">
       </DeepHeaderText>
     </div>

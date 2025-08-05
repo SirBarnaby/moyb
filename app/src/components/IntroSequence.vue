@@ -2,7 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { ANIMATION_CONFIG } from '@/config/animations';
 
-const emit = defineEmits(['intro-complete']);
+const emit = defineEmits<{
+  'intro-complete': [useMobile: boolean]
+}>();
 const isVisible = ref(true);
 const isFadingOut = ref(false);
 
@@ -10,7 +12,7 @@ const closeIntro = () => {
   isFadingOut.value = true;
   setTimeout(() => {
     isVisible.value = false;
-    emit('intro-complete');
+    emit('intro-complete', false);
   }, ANIMATION_CONFIG.intro.fadeOut.duration * 1000);
 };
 

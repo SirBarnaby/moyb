@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Exercise } from "@/core/exercise/Exercise.entity";
+import type { Exercise } from "@/core/exercise/Exercise.entity.ts";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 
@@ -72,7 +72,7 @@ const getEmoji = (muscleInExercise: MuscleInExercise) => {
 };
 
 // Add state for popup
-import type { MuscleInExercise } from "@/core/muscle/MuscleInExercise.entity";
+import type { MuscleInExercise } from "@/core/muscle/MuscleInExercise.entity.ts";
 
 const selectedMuscle = ref<MuscleInExercise | null>(null);
 const popupVisible = ref(false);

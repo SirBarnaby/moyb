@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import DeepHeaderText from "./DeepHeaderText.vue"
 import { ref } from 'vue'
-import { DailyTips } from '../../bll/EDailyTips'
+import { DailyTips } from '../bll/EDailyTips.ts'
 
 // Default welcome message
 const headerMessage = ref("Welcome to Map-of-Your-Body! Click this text to view your daily tip!")

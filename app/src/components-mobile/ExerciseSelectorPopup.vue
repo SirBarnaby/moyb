@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { useMuscleStore } from "@/stores/muscle.store";
+import { useMuscleStore } from "@/stores/muscle.store.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const props = defineProps<{

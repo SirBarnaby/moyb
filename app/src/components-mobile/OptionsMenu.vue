@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
+import { useWorkoutPlanStore } from "@/stores/workoutPlan.store.ts";
 
 const bllStore = useWorkoutPlanStore();
 const isOpen = ref(false);
@@ -52,7 +52,7 @@ const toggleMenu = () => {
 
     <div class="options-section">
       <h2 class="section-title"><strong>Volume Settings</strong></h2>
-      
+
       <div class="option-item">
         <div class="option-label">Max Sets per Week:</div>
         <div class="option-description">We recommend not to change it, but you can. You reach 40% of the maximum muscle stimulus, roughly, at around ~10 sets per week. 80% at around ~20. This is why 20 is the default.</div>
@@ -272,4 +272,4 @@ const toggleMenu = () => {
 .options-toggle-icon {
   font-size: 24px;
 }
-</style> 
+</style>

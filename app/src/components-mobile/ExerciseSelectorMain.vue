@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { useAllExercisesStore } from "@/stores/exercise.store";
-import type { Exercise } from "@/core/exercise/Exercise.entity";
+import { useAllExercisesStore } from "@/stores/exercise.store.ts";
+import type { Exercise } from "@/core/exercise/Exercise.entity.ts";
 import { computed, ref, onMounted, watch, nextTick, onUnmounted, reactive } from "vue";
-import { useMuscleStore } from "@/stores/muscle.store";
-import ExerciseSelectorPopup from "@/components/mobile/ExerciseSelectorPopup.vue";
-import ExerciseDossier from "@/components/mobile/ExerciseDossier.vue";
-import MuscleHeaderPopup from "@/components/mobile/MuscleHeaderPopup.vue";
-import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
+import { useMuscleStore } from "@/stores/muscle.store.ts";
+import ExerciseSelectorPopup from "@/components-mobile/ExerciseSelectorPopup.vue";
+import ExerciseDossier from "@/components-mobile/ExerciseDossier.vue";
+import MuscleHeaderPopup from "@/components-mobile/MuscleHeaderPopup.vue";
+import { useWorkoutPlanStore } from "@/stores/workoutPlan.store.ts";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 import { getMuscleColorByVolume } from "@/common/CSSHelper.ts";
-import { CONSTANTS } from '@/config/mobile-detector';
+import { CONSTANTS } from '@/config/mobile-detector.ts';
 
 // Stores
 const exerciseStore = useAllExercisesStore();

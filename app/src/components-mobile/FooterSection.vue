@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import DeepHeaderText from "@/components/mobile/DeepHeaderText.vue";
+import DeepHeaderText from "@/components-mobile/DeepHeaderText.vue";
 import { ref } from "vue";
 import { exerciseRepository } from "@/main.ts";
-import { useAllExercisesStore } from "@/stores/exercise.store";
+import { useAllExercisesStore } from "@/stores/exercise.store.ts";
 const showSearch = ref(false);
 const searchTerm = ref("");
 const isLoading = ref(false);

@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
+import { useWorkoutPlanStore } from "@/stores/workoutPlan.store.ts";
 import { computed, ref, watch } from "vue";
 // ScrollArea component removed - using native scrollbars instead
 import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus, Minus, Save, FolderOpen } from 'lucide-vue-next';
-import { ExerciseRepository } from "@/repositories/ExerciseRepository";
-import { Exercise } from "@/core/exercise/Exercise.entity";
+import { ExerciseRepository } from "@/repositories/ExerciseRepository.ts";
+import { Exercise } from "@/core/exercise/Exercise.entity.ts";
 
-// Define props for visibility control
-const props = defineProps<{
-  visible?: boolean
-}>();
 
 const bllStore = useWorkoutPlanStore();
 const exerciseRepository = new ExerciseRepository();
@@ -153,9 +149,9 @@ const loadWorkout = async () => {
 </script>
 
 <template>
-  <div v-if="exercises.length > 0 && visible"
+  <div
        class="workout-log-card"
-       :class="{ 'slide-in': visible }">
+       :class="{ 'workout-log-visible': exercises.length > 0 }">
 
     <!-- Header -->
     <div class="card-header flex items-center justify-between">
@@ -368,10 +364,11 @@ font-size: 1.1rem;
 
 .workout-log-card {
   font-family: 'Poppins', sans-serif;
+  top: 8vh;
   position: fixed;
   width: 30%;
   min-width: 85vw;
-  min-height: 40vh; 
+  min-height: 40vh;
   max-height: 85vh;
   background-color: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(24px);
@@ -380,6 +377,12 @@ font-size: 1.1rem;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  left: -100vw;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.workout-log-card.workout-log-visible {
+  left: 0vw;
 }
 
 .card-header {
@@ -511,13 +514,4 @@ font-size: 1.1rem;
   white-space: nowrap;
 }
 
-/* Sliding panel animation */
-.workout-log-card {
-  transform: translateX(-100%);
-  transition: transform 0.3s ease-in-out;
-}
-
-.workout-log-card.slide-in {
-  transform: translateX(0);
-}
 </style>
