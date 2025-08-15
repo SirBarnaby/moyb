@@ -1,15 +1,11 @@
 <script setup lang="ts">
 import { useWorkoutPlanStore } from "@/stores/workoutPlan.store.ts";
 import { computed, ref, watch } from "vue";
-// ScrollArea component removed - using native scrollbars instead
 import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus, Minus, Save, FolderOpen } from 'lucide-vue-next';
-import { ExerciseRepository } from "@/repositories/ExerciseRepository.ts";
 import { Exercise } from "@/core/exercise/Exercise.entity.ts";
 
-
 const bllStore = useWorkoutPlanStore();
-const exerciseRepository = new ExerciseRepository();
 
 // Track previous muscle volumes for change detection
 const previousMuscleVolumes = ref<Record<string, number>>({});
@@ -53,6 +49,11 @@ const exercises = computed(() => {
     sets: bllStore.exercisesArraySets[index]
   }));
 });
+
+// Visibility state for workout log
+const props = defineProps<{
+  isLogVisible: boolean;
+}>();
 
 const incrementExercise = (exercise: any, currentSets: number) => {
   bllStore.updateExerciseSets(exercise, currentSets + 1);
@@ -149,130 +150,164 @@ const loadWorkout = async () => {
 </script>
 
 <template>
-  <div
-       class="workout-log-card"
-       :class="{ 'workout-log-visible': exercises.length > 0 }">
+    <div
+         id="workout-log-card"
+         class="workout-log-card"
+         :class="{
+           'workout-log-completely-hidden': exercises.length === 0,
+           'workout-log-visible': isLogVisible && exercises.length > 0,
+           'workout-log-hidden': !isLogVisible && exercises.length > 0
+         }">
 
-    <!-- Header -->
-    <div class="card-header flex items-center justify-between">
-      <div>
-        <h1 class="text-2xl font-bold text-black tracking-tight">
-          Your Volume
-        </h1>
+      <!-- Header -->
+      <div class="card-header flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl font-bold text-black tracking-tight">
+            Your Volume
+          </h1>
+        </div>
+
+        <div class="flex space-x-2">
+          <button
+            @click="saveWorkout"
+            class="save-button flex items-center p-1.5 rounded-md transition-all"
+            title="Save workout"
+          >
+            <Save :size="14" />
+          </button>
+          <button
+            @click="loadWorkout"
+            class="load-button flex items-center p-1.5 rounded-md transition-all"
+            title="Load workout"
+          >
+            <FolderOpen :size="14" />
+          </button>
+        </div>
       </div>
 
-      <div class="flex space-x-2">
-        <button
-          @click="saveWorkout"
-          class="save-button flex items-center p-1.5 rounded-md transition-all"
-          title="Save workout"
-        >
-          <Save :size="14" />
-        </button>
-        <button
-          @click="loadWorkout"
-          class="load-button flex items-center p-1.5 rounded-md transition-all"
-          title="Load workout"
-        >
-          <FolderOpen :size="14" />
-        </button>
+      <!-- Content -->
+      <div class="flex-1 p-2 space-y-2 overflow-y-auto">
+        <!-- Muscle Groups Section -->
+        <div class="space-y-1">
+          <div class="scroll-container" :style="{ maxHeight: activeMuscles.length > 4 ? '140px' : 'auto' }">
+            <TransitionGroup name="fade" tag="div" class="grid grid-cols-2 gap-1.5 muscle-groups">
+              <div
+                v-for="muscle in activeMuscles"
+                :key="muscle.id"
+                class="muscle-item"
+                :class="{
+                  'muscle-increased': muscleFlashState[muscle.id] === 'increased',
+                  'muscle-decreased': muscleFlashState[muscle.id] === 'decreased',
+                  'muscle-normal': !muscleFlashState[muscle.id]
+                }"
+              >
+                <span class="text-black/80 font-medium capitalize text-sm">{{ muscle.nameOfMuscle }}</span>
+                <span class="text-blue-800 font-bold text-sm bg-blue-500/20 px-1 py-0.5 rounded-full">
+                  {{ muscle.getTotalSetVolume().toFixed(1) }}
+                </span>
+              </div>
+            </TransitionGroup>
+          </div>
+        </div>
+
+        <!-- Exercises Section -->
+        <div class="space-y-1">
+          <div class="exercises-divider">
+            <h2 class="text-sm font-semibold text-black/90 mb-1">Exercises</h2>
+          </div>
+          <div class="scroll-container" :style="{ maxHeight: exercises.length > 5 ? '180px' : 'auto' }">
+            <TransitionGroup name="fade" tag="div" class="space-y-1 exercises-container">
+              <Card
+                v-for="(item, index) in exercises"
+                :key="item.exercise.id || index"
+                class="exercise-item bg-black/5 border-black/10 hover:bg-black/10 transition-all duration-200"
+              >
+                <CardContent class="flex items-center justify-between p-1.5">
+                  <div class="flex items-center space-x-1.5 flex-1">
+                    <button
+                      @click="bllStore.updateExerciseSets(item.exercise, 0)"
+                      class="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
+                      title="Remove exercise"
+                    >
+                      <X :size="14" />
+                    </button>
+                    <span class="text-black/80 font-medium capitalize text-sm flex-1">{{ item.exercise.name }}</span>
+                  </div>
+
+                  <div class="flex items-center space-x-1">
+                    <span class="text-black/70 font-bold text-sm min-w-[1.5rem] text-center">{{ item.sets }}</span>
+                    <button
+                      @click="decrementExercise(item.exercise, item.sets)"
+                      :disabled="item.sets <= 1"
+                      class="control-button minus"
+                      :class="{ 'opacity-50 cursor-not-allowed': item.sets <= 1 }"
+                      title="Decrement set"
+                    >
+                      <Minus :size="14" />
+                    </button>
+                    <button
+                      @click="incrementExercise(item.exercise, item.sets)"
+                      class="control-button plus"
+                      title="Increment set"
+                    >
+                      <Plus :size="14" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TransitionGroup>
+          </div>
+        </div>
       </div>
     </div>
-
-    <!-- Content -->
-    <div class="flex-1 p-2 space-y-2 overflow-y-auto">
-      <!-- Muscle Groups Section -->
-      <div class="space-y-1">
-        <div class="scroll-container" :style="{ maxHeight: activeMuscles.length > 4 ? '140px' : 'auto' }">
-          <TransitionGroup name="fade" tag="div" class="grid grid-cols-2 gap-1.5 muscle-groups">
-            <div
-              v-if="activeMuscles.length === 0"
-              class="col-span-2 flex justify-center items-center p-2.5 bg-black/5 border border-black/10 rounded-lg"
-              key="no-muscles"
-            >
-              <span class="text-black/60 font-medium text-sm">No muscles worked yet</span>
-            </div>
-            <div
-              v-for="muscle in activeMuscles"
-              :key="muscle.id"
-              class="muscle-item"
-              :class="{
-                'muscle-increased': muscleFlashState[muscle.id] === 'increased',
-                'muscle-decreased': muscleFlashState[muscle.id] === 'decreased',
-                'muscle-normal': !muscleFlashState[muscle.id]
-              }"
-            >
-              <span class="text-black/80 font-medium capitalize text-sm">{{ muscle.nameOfMuscle }}</span>
-              <span class="text-blue-800 font-bold text-sm bg-blue-500/20 px-1 py-0.5 rounded-full">
-                {{ muscle.getTotalSetVolume().toFixed(1) }}
-              </span>
-            </div>
-          </TransitionGroup>
-        </div>
-      </div>
-
-      <!-- Exercises Section -->
-      <div class="space-y-1">
-        <div class="exercises-divider">
-          <h2 class="text-sm font-semibold text-black/90 mb-1">Exercises</h2>
-        </div>
-        <div class="scroll-container" :style="{ maxHeight: exercises.length > 5 ? '180px' : 'auto' }">
-          <TransitionGroup name="fade" tag="div" class="space-y-1 exercises-container">
-            <Card
-              v-for="(item, index) in exercises"
-              :key="item.exercise.id || index"
-              class="exercise-item bg-black/5 border-black/10 hover:bg-black/10 transition-all duration-200"
-            >
-              <CardContent class="flex items-center justify-between p-1.5">
-                <div class="flex items-center space-x-1.5 flex-1">
-                  <button
-                    @click="bllStore.updateExerciseSets(item.exercise, 0)"
-                    class="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
-                    title="Remove exercise"
-                  >
-                    <X :size="14" />
-                  </button>
-                  <span class="text-black/80 font-medium capitalize text-sm flex-1">{{ item.exercise.name }}</span>
-                </div>
-
-                <div class="flex items-center space-x-1">
-                  <span class="text-black/70 font-bold text-sm min-w-[1.5rem] text-center">{{ item.sets }}</span>
-                  <button
-                    @click="decrementExercise(item.exercise, item.sets)"
-                    :disabled="item.sets <= 1"
-                    class="control-button minus"
-                    :class="{ 'opacity-50 cursor-not-allowed': item.sets <= 1 }"
-                    title="Decrement set"
-                  >
-                    <Minus :size="14" />
-                  </button>
-                  <button
-                    @click="incrementExercise(item.exercise, item.sets)"
-                    class="control-button plus"
-                    title="Increment set"
-                  >
-                    <Plus :size="14" />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </TransitionGroup>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap');
 
+/* The main card */
+.workout-log-card {
+  font-family: 'Poppins', sans-serif;
+  top: 8vh;
+  position: fixed;
+  width: 30%;
+  min-width: 85vw;
+  min-height: 40vh;
+  max-height: 85vh;
+  background-color: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(24px);
+  box-shadow: 0px 15px 20px 4px rgba(0, 0, 0, 0.4);
+  border-top-left-radius: 0;
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border-bottom-left-radius: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  left: -100vw; /* default hidden; JS controls classes to show */
+}
+
+/* Hidden/visible positions controlled by classes */
+.workout-log-card.workout-log-completely-hidden {
+  left: -100vw;
+}
+
+.workout-log-card.workout-log-hidden {
+  left: -82vw;
+}
+
+.workout-log-card.workout-log-visible {
+  left: 0vw;
+}
+
 .text-2xl {
-font-size: 1.3rem;
+  font-size: 1.3rem;
 }
 
 .text-sm {
-line-height: 1.25rem;
-font-size: 1.1rem;
+  line-height: 1.25rem;
+  font-size: 1.1rem;
 }
 
 /* Flash animation */
@@ -362,29 +397,6 @@ font-size: 1.1rem;
   transition: all 0.3s ease;
 }
 
-.workout-log-card {
-  font-family: 'Poppins', sans-serif;
-  top: 8vh;
-  position: fixed;
-  width: 30%;
-  min-width: 85vw;
-  min-height: 40vh;
-  max-height: 85vh;
-  background-color: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(24px);
-  box-shadow: 17px 17px 20px 10px rgba(0, 0, 0, 0.4);
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  left: -100vw;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.workout-log-card.workout-log-visible {
-  left: 0vw;
-}
-
 .card-header {
   cursor: grab;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
@@ -404,32 +416,32 @@ font-size: 1.1rem;
 }
 
 .control-button {
-    width: 24px;
-    height: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
 }
 
 .control-button.plus {
-    background-color: rgba(34, 197, 94, 0.8);
-    color: white;
+  background-color: rgba(34, 197, 94, 0.8);
+  color: white;
 }
 .control-button.plus:hover {
-    background-color: rgba(34, 197, 94, 1);
-    transform: scale(1.1);
+  background-color: rgba(34, 197, 94, 1);
+  transform: scale(1.1);
 }
 
 .control-button.minus {
-    background-color: rgba(59, 130, 246, 0.8);
-    color: white;
+  background-color: rgba(59, 130, 246, 0.8);
+  color: white;
 }
 .control-button.minus:hover {
-    background-color: rgba(59, 130, 246, 1);
-    transform: scale(1.1);
+  background-color: rgba(59, 130, 246, 1);
+  transform: scale(1.1);
 }
 
 /* Scroll container styling */
@@ -513,5 +525,4 @@ font-size: 1.1rem;
   margin: 0;
   white-space: nowrap;
 }
-
 </style>

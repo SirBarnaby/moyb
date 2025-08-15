@@ -1,5 +1,20 @@
 <script setup lang="ts">
+import { watch } from 'vue';
+import { useMuscleStore } from "@/stores/muscle.store";
 import AnatomyViewer from "@/features/anatomy-viewer/AnatomyViewerMobile.vue";
+import { useExerciseSelectorStore } from "@/stores/exerciseSelector.store";
+
+const muscleStore = useMuscleStore();
+const exerciseSelectorStore = useExerciseSelectorStore();
+
+// Watch the muscle store and update the exercise selector store accordingly
+watch(() => muscleStore.muscle, (newMuscle) => {
+  if (newMuscle) {
+    exerciseSelectorStore.openSelector();
+  } else {
+    exerciseSelectorStore.closeSelector();
+  }
+});
 </script>
 
 <template>

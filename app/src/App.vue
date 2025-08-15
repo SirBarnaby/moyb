@@ -11,9 +11,10 @@ import MobileHeaderSection from "@/components-mobile/HeaderSection.vue";
 import MobileFooterSection from "@/components-mobile/FooterSection.vue";
 import MobileBodySection from "@/components-mobile/BodySection.vue";
 import MobileExerciseSelector from "@/components-mobile/ExerciseSelector.vue";
-import MobileWorkoutLog from "@/components-mobile/WorkoutLogTest.vue";
 import MobileOptionsMenu from "@/components-mobile/OptionsMenu.vue";
-import MobileIntroSequence from "@/components/MobileIntroSequence.vue";
+import MobileIntroSequence from "@/components-mobile/MobileIntroSequence.vue";
+import FitnessMetrics from "./components-mobile/FitnessMetrics.vue";
+import Panels from "./components-mobile/Panels.vue";
 
 // Desktop components
 import DesktopHeaderSection from "@/components/HeaderSection.vue";
@@ -29,6 +30,7 @@ const exerciseStore = useAllExercisesStore();
 const viewModeStore = useViewModeStore();
 const showIntro = ref(true);
 const showMainContent = ref(false);
+const panels = ref<InstanceType<typeof Panels> | null>(null);
 
 const showExerciseSelector = computed(() => {
   return !!muscleStore.muscle || exerciseStore.isSearchActive;
@@ -98,7 +100,7 @@ onMounted(() => {
         :is-visible="showExerciseSelector"
         :is-search-mode="exerciseStore.isSearchActive"
       />
-      <MobileWorkoutLog/>
+      <Panels ref="panels"/>
       <MobileOptionsMenu/>
     </div>
 

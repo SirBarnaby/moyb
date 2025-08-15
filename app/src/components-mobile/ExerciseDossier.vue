@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { Exercise } from "@/core/exercise/Exercise.entity.ts";
+import RedGlowOutline from "@/ui/buttons/RedGlowOutline.vue";
+import Modern from "@/ui/buttons/Modern.vue";
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 
@@ -219,7 +221,9 @@ const hidePopup = () => {
     <!-- Button section -->
     <div class="button-section">
       <button class="back-button" @click="closeExerciseDetail">back</button>
-      <button class="select-button" @click="addExerciseToPlan">select >></button>
+      <!-- <RedGlowOutline @click="addExerciseToPlan"></RedGlowOutline> -->
+      <Modern @click="addExerciseToPlan"></Modern>
+      <!-- <button class="select-button" @click="addExerciseToPlan">select >></button> -->
     </div>
   </div>
 

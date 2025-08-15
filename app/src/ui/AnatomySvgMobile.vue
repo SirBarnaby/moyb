@@ -6,6 +6,7 @@
  */
 
 import type { PropType } from 'vue';
+import { useExerciseSelectorStore } from '@/stores/exerciseSelector.store';
 
 defineProps({
   /**
@@ -19,12 +20,14 @@ defineProps({
   muscleStyles: {
     type: Object as PropType<Record<string, { fill: string }>>,
     required: true,
-  },
+  }
 });
 
 const emit = defineEmits<{
   (e: 'muscleClick', muscleName: string): void;
 }>();
+
+const exerciseSelectorStore = useExerciseSelectorStore();
 </script>
 
 <template>
@@ -36,7 +39,10 @@ const emit = defineEmits<{
     id="svg1"
     xml:space="preserve"
     xmlns="http://www.w3.org/2000/svg"
-    xmlns:svg="http://www.w3.org/2000/svg">
+    xmlns:svg="http://www.w3.org/2000/svg"
+    class="anatomy"
+    :class="{ 'up': exerciseSelectorStore.isExerciseSelectorOpen }"
+    >
     <defs id="defs1" />
     <g id="layer1" transform="translate(-620.07498)" />
 
@@ -248,4 +254,15 @@ const emit = defineEmits<{
   filter: drop-shadow(0 0 8px rgba(74, 144, 226, 0.9));
   transition: filter 0.3s ease-in-out;
 }
+
+.anatomy {
+  position: fixed;
+  top: 0vh;
+  transition: top 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.anatomy.up {
+  top: -27vh;
+}
+
 </style>

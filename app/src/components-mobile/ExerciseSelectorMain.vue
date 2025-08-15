@@ -3,18 +3,19 @@ import { useAllExercisesStore } from "@/stores/exercise.store.ts";
 import type { Exercise } from "@/core/exercise/Exercise.entity.ts";
 import { computed, ref, onMounted, watch, nextTick, onUnmounted, reactive } from "vue";
 import { useMuscleStore } from "@/stores/muscle.store.ts";
-import ExerciseSelectorPopup from "@/components-mobile/ExerciseSelectorPopup.vue";
 import ExerciseDossier from "@/components-mobile/ExerciseDossier.vue";
 import MuscleHeaderPopup from "@/components-mobile/MuscleHeaderPopup.vue";
 import { useWorkoutPlanStore } from "@/stores/workoutPlan.store.ts";
 import { MuscleHelper } from "@/bll/MuscleHelper.ts";
 import { getMuscleColorByVolume } from "@/common/CSSHelper.ts";
-import { CONSTANTS } from '@/config/mobile-detector.ts';
+import FitnessMetrics from "@/components-mobile/FitnessMetrics.vue";
+import { useExerciseSelectorStore } from "@/stores/exerciseSelector.store";
 
 // Stores
 const exerciseStore = useAllExercisesStore();
 const muscleStore = useMuscleStore();
 const bllStore = useWorkoutPlanStore();
+const exerciseSelectorStore = useExerciseSelectorStore();
 
 // Props
 defineProps<{ isSearchMode?: boolean }>();
@@ -44,24 +45,16 @@ const dossierState = reactive({
   isMuscleHeaderVisible: false
 });
 
+const fitnessMetricsState = reactive({
+  isVisible: true,
+  isExpanded: false
+});
+
 // DOM refs
 const exerciseSelectorMainRef = ref<HTMLElement | null>(null);
 
 // Muscle element cache for performance
 const muscleElementCache = new Map<string, Element>();
-
-const popupHeight = computed(() => {
-  return dossierState.current === 'muscle' ? '18%' : '0%';
-});
-
-const isDossierOpen = computed(() => dossierState.current !== 'closed');
-
-// --- Methods ---
-
-const closeDossier = () => {
-  dossierState.current = 'closed';
-  resetMuscleHighlighting();
-};
 
 const closeExerciseDossier = () => {
   // Only proceed if the dossier is actually visible
@@ -73,21 +66,13 @@ const closeExerciseDossier = () => {
     uiState.isDossierVisible = false;
 
     // Ensure the main component remains visible
-    uiState.isComponentVisible = true;
+    exerciseSelectorStore.openSelector();
 
     // Reset the selected exercise
     exerciseState.selected = null;
 
     // Reset muscle highlighting
     resetMuscleHighlighting();
-  }
-};
-
-const toggleMuscleData = () => {
-  if (dossierState.current === 'muscle') {
-    closeDossier();
-  } else {
-    dossierState.current = 'muscle';
   }
 };
 
@@ -101,10 +86,18 @@ const handleAddToPlan = (data: { exercise: Exercise, sets: number }) => {
   bllStore.addMuscleLoadToPlan(data.exercise, data.sets);
   // Reset the UI state to close the dossier
   uiState.isDossierVisible = false;
-  uiState.isComponentVisible = true;
+  exerciseSelectorStore.openSelector();
   exerciseState.selected = null;
   resetMuscleHighlighting();
   emit('exercise-selected', data.exercise);
+};
+
+const toggleFitnessMetrics = () => {
+  fitnessMetricsState.isExpanded = !fitnessMetricsState.isExpanded;
+};
+
+const closeFitnessMetrics = () => {
+  fitnessMetricsState.isExpanded = false;
 };
 
 // --- Muscle Highlighting Logic ---
@@ -205,7 +198,7 @@ let isProcessingAdd = false;
 
 const handleClickOutside = (event: MouseEvent) => {
   // Early return if component is already not visible
-  if (!uiState.isComponentVisible || isProcessingAdd) return;
+    if (!exerciseSelectorStore.isExerciseSelectorOpen || isProcessingAdd) return;
 
   const target = event.target as HTMLElement;
 
@@ -233,7 +226,8 @@ const handleClickOutside = (event: MouseEvent) => {
   }
 
   // Only close if we're not in the middle of a transition
-  uiState.isComponentVisible = false;
+    exerciseSelectorStore.closeSelector();
+  closeFitnessMetrics();
 };
 
 watch(exercises, (newExercises) => {
@@ -242,11 +236,9 @@ watch(exercises, (newExercises) => {
 
 watch(targetMuscle, (newMuscle) => {
   if (newMuscle) {
-    nextTick(() => {
-      uiState.isComponentVisible = true;
-    });
+    exerciseSelectorStore.openSelector();
   } else {
-    uiState.isComponentVisible = false;
+    exerciseSelectorStore.closeSelector();
   }
 });
 
@@ -303,26 +295,20 @@ const filteredExercises = computed(() => {
 </script>
 
 <template>
-  <div ref="exerciseSelectorMainRef" v-show="targetMuscle" class="new-container" :class="{ 'visible': uiState.isComponentVisible, 'dossier-open': uiState.isDossierVisible }">
+  <div ref="exerciseSelectorMainRef" v-show="targetMuscle" class="new-container" :class="{ 'visible': exerciseSelectorStore.isExerciseSelectorOpen, 'dossier-open': uiState.isDossierVisible }">
+    <FitnessMetrics
+    :isMetricsVisible="fitnessMetricsState.isExpanded"
+    @click="toggleFitnessMetrics"
+    />
     <!-- New backdrop element -->
     <div class="backdrop" :class="{ 'active': uiState.isDossierVisible }"></div>
     <div class="new-inner-container">
-      <!-- Popup Container -->
-      <div
-        class="popup-container"
-        :style="{ height: popupHeight, margin: popupHeight !== '0%' ? '0 12px 0 12px' : '0' }"
-      >
-        <div class="popup-content-wrapper" :class="{ 'visible': isDossierOpen }">
-          <ExerciseSelectorPopup
-            :is-visible="isDossierOpen"
-            @close="closeDossier"
-          />
-        </div>
-      </div>
 
       <!-- Title section -->
       <div class="new-title-section">
-        <h1 class="new-main-title">{{ targetMuscle?.name?.toUpperCase() }}</h1>
+        <h1 class="new-main-title">
+          {{ targetMuscle?.name?.toUpperCase() }}
+        </h1>
         <p class="new-subtitle">{{ targetMuscle?.nameLatin }}</p>
       </div>
 
@@ -422,7 +408,7 @@ const filteredExercises = computed(() => {
   height: 50vh;
   display: flex;
   flex-direction: column;
-  transform: translateY(100%);
+  transform: translateY(110%);
   transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   z-index: 100;
 }
@@ -844,6 +830,44 @@ const filteredExercises = computed(() => {
 /* Remove the old ::before implementation */
 .new-container.dossier-open .new-inner-container::before {
   content: none;
+}
+
+/* Metallic Sheen Animation */
+.metallic-sheen {
+  position: relative;
+  cursor: pointer;
+  background: linear-gradient(
+    135deg,
+    #000000 0%,
+    #363636 25%,
+    #2c2c2c 66%,
+    #b1af9c 75%,
+    #000000 90%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: metallicShine 3s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+@keyframes metallicShine {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.metallic-sheen:active {
+  transform: scale(0.98);
+}
+
+@media (hover: none) {
+  .metallic-sheen:active {
+    transform: scale(0.95);
+  }
 }
 
 </style>

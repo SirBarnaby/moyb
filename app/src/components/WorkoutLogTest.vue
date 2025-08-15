@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FancyButton from '@/ui/buttons/FancyButton.vue';
 import { useWorkoutPlanStore } from "@/stores/workoutPlan.store";
 import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 // ScrollArea component removed - using native scrollbars instead
@@ -6,6 +7,8 @@ import { Card, CardContent } from '@/components/ui/card'
 import { X, Plus, Minus, Save, FolderOpen } from 'lucide-vue-next';
 import { ExerciseRepository } from "@/repositories/ExerciseRepository";
 import { Exercise } from "@/core/exercise/Exercise.entity";
+
+const isPanelVisible = ref(true);
 
 const bllStore = useWorkoutPlanStore();
 const exerciseRepository = new ExerciseRepository();
@@ -227,117 +230,125 @@ const loadWorkout = async () => {
 </script>
 
 <template>
-  <div v-if="exercises.length > 0" 
-       ref="workoutLogCard"
-       class="workout-log-card"
+  <div v-if="exercises.length > 0"
+       class="fixed"
        :style="{ left: `${x}px`, top: `${y}px` }">
 
-    <!-- Header -->
-    <div class="card-header flex items-center justify-between" @mousedown="startDrag">
-      <div>
-        <h1 class="text-2xl font-bold text-black tracking-tight">
-          Your Volume
-        </h1>
-        <div class="h-0.5 w-20 bg-gray-300 mt-1 rounded-full" />
-      </div>
-      
-      <div class="flex space-x-2">
-        <button 
-          @click="saveWorkout" 
-          class="save-button flex items-center p-2 rounded-md transition-all"
-          title="Save workout"
-        >
-          <Save :size="16" />
-        </button>
-        <button 
-          @click="loadWorkout" 
-          class="load-button flex items-center p-2 rounded-md transition-all"
-          title="Load workout"
-        >
-          <FolderOpen :size="16" />
-        </button>
-      </div>
-    </div>
+    <!-- Toggle Button -->
+    <FancyButton :is-orange="!isPanelVisible" @click="isPanelVisible = !isPanelVisible" />
 
-    <!-- Content -->
-    <div class="flex-1 p-4 space-y-4 overflow-y-auto">
-      <!-- Muscle Groups Section -->
-      <div class="space-y-3">
-        <h2 class="text-md font-semibold text-black/90 mb-3">Muscle Groups</h2>
-        <div class="scroll-container" :style="{ maxHeight: activeMuscles.length > 0 ? '500px' : '80px' }">
-          <TransitionGroup name="fade" tag="div" class="grid grid-cols-2 gap-2 muscle-groups">
-            <div
-              v-if="activeMuscles.length === 0"
-              class="col-span-2 flex justify-center items-center p-2.5 bg-black/5 border border-black/10 rounded-lg"
-              key="no-muscles"
-            >
-              <span class="text-black/60 font-medium text-sm">No muscles worked yet</span>
-            </div>
-            <div
-              v-for="muscle in activeMuscles"
-              :key="muscle.id"
-              class="muscle-item"
-              :class="{
-                'muscle-increased': muscleFlashState[muscle.id] === 'increased',
-                'muscle-decreased': muscleFlashState[muscle.id] === 'decreased',
-                'muscle-normal': !muscleFlashState[muscle.id]
-              }"
-            >
-              <span class="text-black/80 font-medium capitalize text-sm">{{ muscle.nameOfMuscle }}</span>
-              <span class="text-blue-800 font-bold text-sm bg-blue-500/20 px-1 py-0.5 rounded-full">
-                {{ muscle.getTotalSetVolume().toFixed(1) }}
-              </span>
-            </div>
-          </TransitionGroup>
+    <!-- Main Panel -->
+    <div v-if="isPanelVisible"
+         ref="workoutLogCard"
+         class="workout-log-card">
+
+      <!-- Header -->
+      <div class="card-header flex items-center justify-between" @mousedown="startDrag">
+        <div>
+          <h1 class="text-2xl font-bold text-black tracking-tight">
+            Your Volume
+          </h1>
+          <div class="h-0.5 w-20 bg-gray-300 mt-1 rounded-full" />
+        </div>
+
+        <div class="flex space-x-2">
+          <button
+            @click="saveWorkout"
+            class="save-button flex items-center p-2 rounded-md transition-all"
+            title="Save workout"
+          >
+            <Save :size="16" />
+          </button>
+          <button
+            @click="loadWorkout"
+            class="load-button flex items-center p-2 rounded-md transition-all"
+            title="Load workout"
+          >
+            <FolderOpen :size="16" />
+          </button>
         </div>
       </div>
 
-      <!-- Exercises Section -->
-      <div class="space-y-3">
-        <h2 class="text-md font-semibold text-black/90 mb-3">Exercises</h2>
-        <div class="scroll-container" :style="{ maxHeight: exercises.length > 0 ? '420px' : '0px' }">
-          <TransitionGroup name="fade" tag="div" class="space-y-2 exercises-container">
-            <Card
-              v-for="(item, index) in exercises"
-              :key="item.exercise.id || index"
-              class="exercise-item bg-black/5 border-black/10 hover:bg-black/10 transition-all duration-200"
-            >
-              <CardContent class="flex items-center justify-between p-2.5">
-                <div class="flex items-center space-x-2 flex-1">
-                  <button
-                    @click="bllStore.updateExerciseSets(item.exercise, 0)"
-                    class="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
-                    title="Remove exercise"
-                  >
-                    <X :size="16" />
-                  </button>
-                  <span class="text-black/80 font-medium capitalize text-sm flex-1">{{ item.exercise.name }}</span>
-                </div>
+      <!-- Content -->
+      <div class="flex-1 p-4 space-y-4 overflow-y-auto">
+        <!-- Muscle Groups Section -->
+        <div class="space-y-3">
+          <h2 class="text-md font-semibold text-black/90 mb-3">Muscle Groups</h2>
+          <div class="scroll-container" :style="{ maxHeight: activeMuscles.length > 0 ? '500px' : '80px' }">
+            <TransitionGroup name="fade" tag="div" class="grid grid-cols-2 gap-2 muscle-groups">
+              <div
+                v-if="activeMuscles.length === 0"
+                class="col-span-2 flex justify-center items-center p-2.5 bg-black/5 border border-black/10 rounded-lg"
+                key="no-muscles"
+              >
+                <span class="text-black/60 font-medium text-sm">No muscles worked yet</span>
+              </div>
+              <div
+                v-for="muscle in activeMuscles"
+                :key="muscle.id"
+                class="muscle-item"
+                :class="{
+                  'muscle-increased': muscleFlashState[muscle.id] === 'increased',
+                  'muscle-decreased': muscleFlashState[muscle.id] === 'decreased',
+                  'muscle-normal': !muscleFlashState[muscle.id]
+                }"
+              >
+                <span class="text-black/80 font-medium capitalize text-sm">{{ muscle.nameOfMuscle }}</span>
+                <span class="text-blue-800 font-bold text-sm bg-blue-500/20 px-1 py-0.5 rounded-full">
+                  {{ muscle.getTotalSetVolume().toFixed(1) }}
+                </span>
+              </div>
+            </TransitionGroup>
+          </div>
+        </div>
 
-                <div class="flex items-center space-x-2">
-                  <span class="text-blue-800 font-bold text-lg bg-blue-500/30 px-1.5 py-0.5 rounded-full min-w-[28px] text-center">
-                    {{ item.sets }}
-                  </span>
-                  <button
-                    @click="decrementExercise(item.exercise, item.sets)"
-                    :disabled="item.sets <= 1"
-                    class="control-button minus"
-                    :class="{ 'opacity-50 cursor-not-allowed': item.sets <= 1 }"
-                    title="Decrement set"
-                  >
-                    <Minus :size="16" />
-                  </button>
-                  <button
-                    @click="incrementExercise(item.exercise, item.sets)"
-                    class="control-button plus"
-                    title="Increment set"
-                  >
-                    <Plus :size="16" />
-                  </button>
-                </div>
-              </CardContent>
-            </Card>
-          </TransitionGroup>
+        <!-- Exercises Section -->
+        <div class="space-y-3">
+          <h2 class="text-md font-semibold text-black/90 mb-3">Exercises</h2>
+          <div class="scroll-container" :style="{ maxHeight: exercises.length > 0 ? '420px' : '0px' }">
+            <TransitionGroup name="fade" tag="div" class="space-y-2 exercises-container">
+              <Card
+                v-for="(item, index) in exercises"
+                :key="item.exercise.id || index"
+                class="exercise-item bg-black/5 border-black/10 hover:bg-black/10 transition-all duration-200"
+              >
+                <CardContent class="flex items-center justify-between p-2.5">
+                  <div class="flex items-center space-x-2 flex-1">
+                    <button
+                      @click="bllStore.updateExerciseSets(item.exercise, 0)"
+                      class="text-red-400 hover:text-red-300 transition-colors duration-200 p-1"
+                      title="Remove exercise"
+                    >
+                      <X :size="16" />
+                    </button>
+                    <span class="text-black/80 font-medium capitalize text-sm flex-1">{{ item.exercise.name }}</span>
+                  </div>
+
+                  <div class="flex items-center space-x-2">
+                    <span class="text-blue-800 font-bold text-lg bg-blue-500/30 px-1.5 py-0.5 rounded-full min-w-[28px] text-center">
+                      {{ item.sets }}
+                    </span>
+                    <button
+                      @click="decrementExercise(item.exercise, item.sets)"
+                      :disabled="item.sets <= 1"
+                      class="control-button minus"
+                      :class="{ 'opacity-50 cursor-not-allowed': item.sets <= 1 }"
+                      title="Decrement set"
+                    >
+                      <Minus :size="16" />
+                    </button>
+                    <button
+                      @click="incrementExercise(item.exercise, item.sets)"
+                      class="control-button plus"
+                      title="Increment set"
+                    >
+                      <Plus :size="16" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TransitionGroup>
+          </div>
         </div>
       </div>
     </div>
@@ -436,7 +447,6 @@ const loadWorkout = async () => {
 
 .workout-log-card {
   font-family: 'Poppins', sans-serif;
-  position: fixed;
   width: 30%;
   min-width: 350px;
   max-width: 500px;

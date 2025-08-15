@@ -1,2 +1,0 @@
-If an user asks for a change in the code that you deem as somewhat ambiguous or confusing or not apparent at fits, you are to ask the user more instructions.
-If you are not very confident in what the user asked, loop it back to him, but in a different way, so an miscrepancies between the two come apparent.

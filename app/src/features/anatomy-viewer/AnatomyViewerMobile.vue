@@ -9,10 +9,13 @@
 import { ref } from 'vue';
 import { useMuscleInteraction } from './composables/useMuscleInteraction.ts';
 import AnatomySvg from '@/ui/AnatomySvgMobile.vue';
+import { useExerciseSelectorStore } from '@/stores/exerciseSelector.store';
 
 // A template ref to the root element of the feature, passed to the composable
 // for detecting outside clicks.
 const anatomyRoot = ref<HTMLElement | undefined>();
+
+const exerciseSelectorStore = useExerciseSelectorStore();
 
 const { muscleClasses, muscleStyles, handleMuscleClick } = useMuscleInteraction(anatomyRoot);
 </script>

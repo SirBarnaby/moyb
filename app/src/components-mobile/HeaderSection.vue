@@ -28,22 +28,12 @@ function handleHeaderClick() {
   }, 500) // Transition time for fade out
 }
 
-// State to track panel visibility
-const isPanelVisible = ref(false)
-
 // Emit event when panel visibility changes
 const emit = defineEmits(['toggle-panel'])
-
-// Function to toggle panel visibility
-function togglePanel() {
-  isPanelVisible.value = !isPanelVisible.value
-  emit('toggle-panel', isPanelVisible.value)
-}
 </script>
 
 <template>
   <section class="headersection section">
-    <button class="menu-button" @click="togglePanel">☰</button>
     <DeepHeaderText
       :msg="headerMessage"
       img_url="/dot.png"
