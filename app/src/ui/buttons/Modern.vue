@@ -68,7 +68,7 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 16px 36px;
+  padding: 12px 28px;
   border: 4px solid;
   border-color: transparent;
   font-size: 16px;
@@ -91,11 +91,11 @@ onBeforeUnmount(() => {
 }
 
 .animated-button .arr-1 {
-  right: 16px;
+  right: 12px;
 }
 
 .animated-button .arr-2 {
-  left: -25%;
+  left: -30%;
 }
 
 .animated-button .circle {
@@ -114,7 +114,7 @@ onBeforeUnmount(() => {
 .animated-button .text {
   position: relative;
   z-index: 1;
-  transform: translateX(-12px);
+  transform: translateX(-8px);
   transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -125,8 +125,8 @@ onBeforeUnmount(() => {
   border-radius: 12px;
 }
 .animated-button:hover .arr-1 { right: -25%; }
-.animated-button:hover .arr-2 { left: 16px; }
-.animated-button:hover .text { transform: translateX(12px); }
+.animated-button:hover .arr-2 { left: 4px; }
+.animated-button:hover .text { transform: translateX(1px); }
 .animated-button:hover svg { fill: var(--activated-colour); }
 .animated-button:hover .circle {
   width: 220px;
@@ -148,8 +148,8 @@ onBeforeUnmount(() => {
   border-radius: 12px;
 }
 .animated-button.active .arr-1 { right: -25%; }
-.animated-button.active .arr-2 { left: 16px; }
-.animated-button.active .text { transform: translateX(12px); }
+.animated-button.active .arr-2 { left: 4px; }
+.animated-button.active .text { transform: translateX(1px); }
 .animated-button.active svg { fill: var(--activated-colour); }
 .animated-button.active .circle {
   width: 220px;

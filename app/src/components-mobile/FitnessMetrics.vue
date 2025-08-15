@@ -116,7 +116,7 @@ const fiberTypeImage = computed(() => {
               </div>
             </div>
           </div>
-          
+
           <!-- Stretch sensitivity bar in the last row -->
           <div class="backdrop-blur-sm rounded-md single-statistic-container">
             <div class="space-y-1">
@@ -136,16 +136,11 @@ const fiberTypeImage = computed(() => {
 
       <!-- Muscle info section -->
       <div class="space-y-1">
-        <div class="fiber-type-divider">
-          <h2 class="text-sm font-semibold text-black/90 mb-1">Muscle Info</h2>
-        </div>
         <div class="space-y-2 pt-2">
-          <div class="flex items-start gap-3 muscle-info">
-            <div class="flex-shrink-0">
-              <h3 class="text-xs font-medium text-black-700 mb-2">Main fiber type:</h3>
-              <div
-                class="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300"
-              >
+          <div class="backdrop-blur-sm rounded-md single-statistic-container">
+            <div class="flex items-start gap-3">
+              <div class="flex-shrink-0 flex flex-col items-center">
+                <h3 class="text-xs font-medium text-black-700 mb-1">Main fiber type:</h3>
                 <img
                   :src="fiberTypeImage"
                   width="60"
@@ -154,12 +149,11 @@ const fiberTypeImage = computed(() => {
                   class="max-w-full max-h-full object-contain"
                 />
               </div>
-            </div>
-            <div class="flex-1">
-              <p class="text-xs text-black-600 leading-relaxed">
-                <span class="font-medium">What it gives you:</span>
-                {{ targetMuscle?.description || 'No description available for this muscle.' }}
-              </p>
+              <div class="flex-1">
+                <p class="text-xs text-black-600 leading-relaxed">
+                  {{ targetMuscle?.description || 'No description available for this muscle.' }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -195,7 +189,7 @@ const fiberTypeImage = computed(() => {
 /* Content container for fade in/out effect */
 .fitness-metrics-content {
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.25s ease-in-out;
 }
 
 .fitness-metrics-visible .fitness-metrics-content {

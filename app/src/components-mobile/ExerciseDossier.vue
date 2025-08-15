@@ -101,78 +101,91 @@ const hidePopup = () => {
   <div v-if="visible && exercise" class="exercise-card">
     <!-- Header with logo and title -->
     <div class="card-header">
-      <div class="logo"></div>
+      <div class="header-icons">
+        <img v-if="exercise.isUnilateral" class="header-icon" src="/blue-warning.png" title="This exercise is unilateral, meaning it only works one side of the body at a time.">
+        <img v-if="exercise.isHighSpinalLoad" class="header-icon" src="/red-warning.png" title="This exercise puts a lot of weight/stress on the spine.">
+      </div>
       <h1 class="title">{{ exercise.name }}</h1>
     </div>
 
     <!-- Exercise details section -->
     <div class="details-section">
-      <div class="details-grid">
-        <div class="detail-item" v-if="exercise.equipmentRequired" title="The equipment required for this exercise.">
-          <span class="detail-label" ><strong>Equipment:</strong></span>
-          <span class="detail-value">{{ exercise.equipmentRequired }}</span>
+      <div class="details-grid grid grid-cols-2 gap-1">
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.equipmentRequired" title="The equipment required for this exercise.">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">Equipment</h3>
+            <div class="text-sm font-medium text-black">{{ exercise.equipmentRequired }}</div>
+          </div>
         </div>
-        <div class="detail-item" v-if="exercise.movementType" title="Whether the exercise is Eccentric, Concentric, Isometric, Dynamic or Special.">
-          <span class="detail-label"><strong>Movement:</strong></span>
-          <span class="detail-value">{{ exercise.movementType }}</span>
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.movementType" title="Whether the exercise is Eccentric, Concentric, Isometric, Dynamic or Special.">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">Movement</h3>
+            <div class="text-sm font-medium text-black">{{ exercise.movementType }}</div>
+          </div>
         </div>
-        <div class="detail-item" v-if="exercise.isUnilateral !== undefined" title="Whether the exercise will only work one side of the body at a time.">
-          <span class="detail-label"><strong>Unilateral:</strong></span>
-          <span class="detail-value">{{ exercise.isUnilateral ? 'Yes' : 'No' }}</span>
-        </div>
-        <div class="detail-item" v-if="exercise.isHighSpinalLoad !== undefined" title="Does the exercise put a lot of weight/stress on the spine?">
-          <span class="detail-label"><strong>High Spinal Load:</strong></span>
-          <span class="detail-value">{{ exercise.isHighSpinalLoad ? 'Yes' : 'No' }}</span>
+        <div class="backdrop-blur-sm rounded-md single-statistic-container col-span-2">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">About exercise</h3>
+            <div class="text-sm font-medium text-black leading-relaxed">{{ exercise.description }}</div>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- Statistics section with meters -->
     <div class="stats-section">
-      <div class="divider">
-        <h2 class="text-sm font-semibold text-black/90 mb-1">Characteristics</h2>
-      </div>
+<!--      <div class="divider">-->
+<!--        <h2 class="text-sm font-semibold text-black/90 mb-1">Characteristics</h2>-->
+<!--      </div>-->
 
-      <div class="stat-meters">
-        <div class="stat-meter" v-if="exercise.injuryRiskFactor" title="Is the exercise generally considered to be injury prone?">
-          <div class="stat-label">Injury Risk:</div>
-          <div class="meter-container">
-            <div class="meter-segments">
-              <div v-for="n in 3" :key="`injury-${n}`"
-                class="meter-segment"
-                :class="{ 'segment-filled': n <= injuryRiskSegments }"
-              ></div>
+      <div class="stat-meters grid grid-cols-2 gap-1">
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.injuryRiskFactor" title="Is the exercise generally considered to be injury prone?">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">Injury Risk</h3>
+            <div class="relative h-[15px] bg-gray-200 rounded-[3px] overflow-hidden single-statistic">
+              <div class="absolute inset-0 flex">
+                <div v-for="n in 3" :key="`injury-${n}`"
+                  class="meter-segment"
+                  :class="{ 'segment-filled': n <= injuryRiskSegments }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="stat-meter" v-if="exercise.jointStressFactor" title="Is the exercise generally considered to be hard on its respective joints?">
-          <div class="stat-label">Joint Stress:</div>
-          <div class="meter-container">
-            <div class="meter-segments">
-              <div v-for="n in 3" :key="`joint-${n}`"
-                class="meter-segment"
-                :class="{ 'segment-filled': n <= jointStressSegments }"
-              ></div>
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.jointStressFactor" title="Is the exercise generally considered to be hard on its respective joints?">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">Joint Stress</h3>
+            <div class="relative h-[15px] bg-gray-200 rounded-[3px] overflow-hidden single-statistic">
+              <div class="absolute inset-0 flex">
+                <div v-for="n in 3" :key="`joint-${n}`"
+                  class="meter-segment"
+                  :class="{ 'segment-filled': n <= jointStressSegments }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="stat-meter" v-if="exercise.cnsFatigueFactor" title="Central Nervous System Fatigue. Generally, how hard is the exercise to perform?">
-          <div class="stat-label">CNS Fatigue:</div>
-          <div class="meter-container">
-            <div class="meter-segments">
-              <div v-for="n in 3" :key="`cns-${n}`"
-                class="meter-segment"
-                :class="{ 'segment-filled': n <= cnsFatigueSegments }"
-              ></div>
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.cnsFatigueFactor" title="Central Nervous System Fatigue. Generally, how hard is the exercise to perform?">
+          <div class="space-y-1">
+            <h3 class="text-xs font-medium text-black-700">CNS Fatigue</h3>
+            <div class="relative h-[15px] bg-gray-200 rounded-[3px] overflow-hidden single-statistic">
+              <div class="absolute inset-0 flex">
+                <div v-for="n in 3" :key="`cns-${n}`"
+                  class="meter-segment"
+                  :class="{ 'segment-filled': n <= cnsFatigueSegments }"
+                ></div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="stat-meter" v-if="exercise.rangeOfMotion" title="The range of motion of the exercise. How much can the muscle stretch or contract?">
-          <div class="stat-label" style="width: 160px">Range of Motion:</div>
-          <div class="stat-value">{{ exercise.rangeOfMotion }}</div>
+        <div class="backdrop-blur-sm rounded-md single-statistic-container" v-if="exercise.rangeOfMotion" title="The range of motion of the exercise. How much can the muscle stretch or contract?">
+          <div class="space-y-1">
+<!--            <h3 class="text-xs font-medium text-black-700">Range of Motion</h3>-->
+            <div class="text-sm font-medium text-black">{{ exercise.rangeOfMotion }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -198,32 +211,19 @@ const hidePopup = () => {
       </div>
     </div>
 
-    <!-- Description section -->
-    <div class="description-section" style="border-bottom: 0px">
-      <div class="divider">
-        <h2 class="text-sm font-semibold text-black/90 mb-1">About exercise</h2>
-      </div>
-      <p class="description-text">
-        {{ exercise.description }}
-      </p>
-    </div>
 
     <!-- Sets section -->
-    <div class="sets-section">
-      <h2 class="section-title" style="margin: 0px"><strong>Sets per week</strong></h2>
-      <div class="sets-controls">
-        <button @click="setsPerWeek > 1 ? setsPerWeek-- : null" class="sets-button sets-button-minus">-</button>
-        <span class="sets-value" :key="setsPerWeek">{{ setsPerWeek }}</span>
-        <button @click="setsPerWeek++" class="sets-button sets-button-plus">+</button>
-      </div>
-    </div>
-
-    <!-- Button section -->
-    <div class="button-section">
+    <div class="sets-wrapper">
       <button class="back-button" @click="closeExerciseDetail">back</button>
-      <!-- <RedGlowOutline @click="addExerciseToPlan"></RedGlowOutline> -->
+      <div class="sets-section">
+        <h2 class="section-title text-center" style="margin: 0px"><strong>Sets per week</strong></h2>
+        <div class="sets-controls">
+          <button @click="setsPerWeek > 1 ? setsPerWeek-- : null" class="sets-button sets-button-minus">-</button>
+          <span class="sets-value" :key="setsPerWeek">{{ setsPerWeek }}</span>
+          <button @click="setsPerWeek++" class="sets-button sets-button-plus">+</button>
+        </div>
+      </div>
       <Modern @click="addExerciseToPlan"></Modern>
-      <!-- <button class="select-button" @click="addExerciseToPlan">select >></button> -->
     </div>
   </div>
 
@@ -261,9 +261,9 @@ const hidePopup = () => {
 
 .exercise-card {
   position: fixed;
-  top: 10vh;
-  left: 20px;
-  right: 20px;
+  bottom: 2vh;
+  left: 10px;
+  max-width: 95vw;
   background-color: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(24px);
   box-shadow: 17px 17px 20px 10px rgba(0, 0, 0, 0.4);
@@ -272,17 +272,44 @@ const hidePopup = () => {
   display: flex;
   flex-direction: column;
   overflow: auto; /* Make content scrollable if it overflows */
+  animation: blurryFadeIn 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes blurryFadeIn {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: scale(1);
+  }
 }
 
 .card-header {
-  padding: 10px;
+  padding: 7px 17px;
   border-bottom: 1px solid #e1e0e0;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   backdrop-filter: blur(24px) contrast(1.5);
+}
+
+.header-icons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.header-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
 }
 
 .logo {
@@ -296,7 +323,7 @@ const hidePopup = () => {
 
 .title {
   color: #000000;
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 600;
   margin: 0;
   overflow: hidden;
@@ -313,18 +340,9 @@ const hidePopup = () => {
   padding-bottom: 0px;
 }
 
-.sets-section {
-  margin-left: 20px;
-  padding-right: 16px;
-  margin-right: 20px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
 .details-section,
 .stats-section,
-.muscles-section,
-.sets-section {
+.muscles-section {
   margin: 2px 12px;
   margin-left: 12px;
   margin-right: 12px;
@@ -338,87 +356,43 @@ const hidePopup = () => {
   margin: 0 0 4px 0;
 }
 
-.details-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+
+.single-statistic {
+  text-shadow: 0px 0px 3px 4px rgba(255, 255, 255, 1);
 }
 
-.detail-item {
-  display: flex;
-  flex-direction: column;
-  font-size: 14px;
-}
-
-.detail-label {
-  font-weight: 500;
-  color: #555;
-  font-size: 18px;
-}
-
-.detail-value {
-  color: #000;
-  font-size: 15px;
-}
-
-.stat-meters {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-meter {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
-}
-
-.stat-label {
-  width: 100px;
-  text-align: right;
-  padding-right: 10px;
-  font-weight: 500;
-}
-
-.stat-value {
-  font-weight: 400;
-}
-
-.meter-container {
-  flex: 1;
-  background-image: linear-gradient(90deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1));
-  height: 16px;
-  position: relative;
-  border-radius: 3px;
-  display: flex;
-  align-items: center;
-  padding: 2px;
-  margin-right: 8px;
-}
-
-.meter-segments {
-  display: flex;
-  width: 100%;
-  height: 80%;
-  gap: 3px;
+.single-statistic-container {
+  border-width: 1px;
+  border-color: rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px) contrast(1.25);
+  padding-top: 0.3rem;
+  padding-bottom: 0.3rem;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
 }
 
 .meter-segment {
   flex: 1;
-  background-color: rgba(224, 224, 224, 0.3);
-  border-radius: 2px;
   transition: background-color 0.3s ease;
 }
 
-.meter-segment.segment-filled:nth-child(3) {
-  background-color: #ff3459;
-}
-
-.meter-segment.segment-filled:nth-child(2) {
-  background-color: #ffa500;
+.meter-segment.segment-filled {
+  background-color: #c0ec2e;
+  border-width: 1px;
+  border-color: rgba(0, 0, 0, 0.15);
+  border-radius: 0px;
 }
 
 .meter-segment.segment-filled:nth-child(1) {
-  background-color: #c0ec2e;
+  background-color: #f03859;
+}
+
+.meter-segment.segment-filled:nth-child(2) {
+  background-color: #ffa03a;
+}
+
+.meter-segment.segment-filled:nth-child(3) {
+  background-color: #c1fb00;
 }
 
 .muscle-grid {
@@ -486,16 +460,21 @@ const hidePopup = () => {
   overflow-wrap: break-word; /* Alternative for better browser support */
 }
 
+.sets-wrapper {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 12px;
+}
+
 .sets-section {
-  padding: 6px 16px;
+  padding: 5px 8px;
   border-bottom: 1px solid #e1e0e0;
-  border: 1px solid rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  margin-left: 44px;
-  margin-right: 44px;
-  margin-bottom: 0px;
-  margin-top: 8px;
   backdrop-filter: blur(48px) contrast(1.5);
+  max-width: 45vw;
+  border-image: linear-gradient(to top right, #00000012, #fff) 1;
 }
 
 .sets-controls {
@@ -571,12 +550,6 @@ const hidePopup = () => {
   }
 }
 
-.button-section {
-  padding: 10px 16px;
-  display: flex;
-  justify-content: space-between;
-  margin-top: auto;
-}
 
 .back-button {
   background-color: transparent;
@@ -588,6 +561,8 @@ const hidePopup = () => {
   border: none;
   cursor: pointer;
   transition: color 0.2s, text-shadow 0.2s;
+  min-width: 80px;
+  text-align: center;
 }
 
 .back-button:hover {
